@@ -1,0 +1,4 @@
+# generic error message
+GEM:
+  one: "Qualcosa è andato storto, riprova più tardi %s"
+  other: "Alcune cose sono andate storte, riprova più tardi %s"

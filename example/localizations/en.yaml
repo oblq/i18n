@@ -1,0 +1,5 @@
+# generic error message
+GEM:
+  one: "Something went wrong, please try again later %s"
+  other: "Some things went wrong, please try again later %s"
+

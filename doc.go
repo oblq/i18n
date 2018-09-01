@@ -1,5 +1,5 @@
-// Package i18n provides support for looking up messages
-// according to a set of locale preferences.
+// Package i18n is a minimal, flexible and
+// simple to use localizations package.
 //
 // Localization files can be yaml, json or toml.
 //

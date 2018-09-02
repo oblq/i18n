@@ -1,11 +1,11 @@
 package i18n
 
 import (
-	"fmt"
 	"io/ioutil"
 	"log"
 	"net/http"
-	"path/filepath"
+
+	"github.com/go-errors/errors"
 
 	"github.com/oblq/sprbox"
 	"golang.org/x/text/language"
@@ -16,14 +16,18 @@ type Config struct {
 	// Locales order is important, the first one is the default,
 	// they must be ordered from the most preferred to te least one.
 	// A localization file for any given locale must be provided.
-	Locales []string `yaml:"locales"`
+	Locales []string
+
+	// LocalizationsBytes contains the hardcoded localizations files.
+	LocalizationsBytes map[string][]byte
+
 	// LocalizationsPath is the path of localization files.
-	LocalizationsPath string `yaml:"localizations_path"`
+	LocalizationsPath string
 }
 
-// localization represent a key value with localized strings
+// Localization represent a key value with localized strings
 // for both single and plural results
-type localization struct {
+type Localization struct {
 	One, Other string
 }
 
@@ -44,8 +48,8 @@ type I18n struct {
 	// Automatically generated using Config.Locales.
 	matcher language.Matcher
 
-	// language, key -> localization
-	localizations map[string]map[string]localization
+	// language, key -> Localization
+	localizations map[string]map[string]Localization
 
 	// localizedHandlers is used by the FileServer
 	localizedHandlers map[string]http.Handler
@@ -69,7 +73,7 @@ func NewI18n(configFilePath string, config *Config) *I18n {
 	}
 
 	if err := i18n.setup(); err != nil {
-		fmt.Printf("[i18n] error: %v", err)
+		log.Fatal("[i18n] error:", err.Error())
 	}
 
 	return i18n
@@ -89,32 +93,13 @@ func (i18n *I18n) SpareConfig(configFiles []string) error {
 
 func (i18n *I18n) setup() error {
 	i18n.Tags = parseLocalesToTags(i18n.Config.Locales)
-	if len(i18n.Tags) == 0 {
-		i18n.Tags = []language.Tag{
-			language.English,
-		}
-	}
-
 	i18n.matcher = language.NewMatcher(i18n.Tags)
-	i18n.localizations = make(map[string]map[string]localization)
 
-	for _, lang := range i18n.Tags {
-		var newLanguage map[string]localization
-
-		//if locFile, err := ioutil.ReadFile(filepath.Join(i18n.Config.LocalizationsPath, lang.String()+".yml")); err != nil {
-		//	return fmt.Errorf("[i18n] missing %s.* file in static folder: %v", lang.String(), err)
-		//} else if err = sprbox.Unmarshal(locFile, &newLanguage); err != nil {
-		//	return fmt.Errorf("[i18n] error: %v", err)
-		//}
-
-		if err := LoadLocalization(
-			&newLanguage,
-			filepath.Join(i18n.Config.LocalizationsPath, lang.String()),
-		); err != nil {
-			return fmt.Errorf("[i18n] error: %v", err)
-		}
-		i18n.localizations[lang.String()] = newLanguage
+	if len(i18n.Config.LocalizationsBytes) > 0 {
+		return i18n.UnmarshalLocalizationBytes(i18n.Config.LocalizationsBytes)
+	} else if len(i18n.Config.LocalizationsPath) > 0 {
+		return i18n.LoadLocalizationFiles()
+	} else {
+		return errors.New("Config.LocalizationsBytes or Config.LocalizationsPath must be provided")
 	}
-
-	return nil
 }

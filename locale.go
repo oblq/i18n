@@ -1,9 +1,8 @@
 package i18n
 
 import (
-	"net/http"
-
 	"log"
+	"net/http"
 
 	"golang.org/x/text/language"
 )
@@ -15,9 +14,9 @@ const (
 	headerKey = "Accept-Language"
 )
 
-// GetLocale return the request language Tag.
-// tag.String() -> locale
-// First look for user language by the GetLocaleOverride func,
+// GetLocale return the request language.Tag.
+//  <language.Tag>.String() // -> locale
+// It first look for the locale by the GetLocaleOverride func,
 // then in cookies ("language" and/or "lang" keys),
 // then in 'Accept-Language' header.
 func (i18n *I18n) GetLocale(r *http.Request) language.Tag {
@@ -49,6 +48,8 @@ func (i18n *I18n) GetLocale(r *http.Request) language.Tag {
 }
 
 // parseLocalesToTags convert an array of locales to an array of language.Tag.
+// If no language.Tag can be parsed by the provided locales
+// then language.English will be returned by default in tags array.
 func parseLocalesToTags(locales []string) (tags []language.Tag) {
 	for _, locale := range locales {
 		newTag, err := language.Parse(locale)
@@ -58,5 +59,12 @@ func parseLocalesToTags(locales []string) (tags []language.Tag) {
 
 		tags = append(tags, newTag)
 	}
+
+	if len(tags) == 0 {
+		tags = []language.Tag{
+			language.English,
+		}
+	}
+
 	return
 }

@@ -8,7 +8,7 @@ import (
 
 // T translate the key based on the passed locale.
 func (i18n *I18n) T(locale string, plural bool, key string, params ...interface{}) string {
-	var language map[string]localization
+	var language map[string]Localization
 	var ok bool
 	if language, ok = i18n.localizations[locale]; !ok {
 		language, _ = i18n.localizations[i18n.Tags[0].String()]

@@ -1,9 +1,8 @@
 package main
 
 import (
+	"log"
 	"net/http"
-
-	"github.com/xenolf/lego/log"
 
 	"github.com/oblq/i18n"
 )
@@ -19,19 +18,22 @@ func main() {
 
 	http.HandleFunc("/one", func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
-		w.Write([]byte(localizer.AutoT(r, false, "GEM", "Marco")))
+		response := []byte(localizer.AutoT(r, false, "GEM", "Marco"))
+		w.Write(response)
 	})
 
 	http.HandleFunc("/other", func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
-		w.Write([]byte(localizer.AutoT(r, true, "GEM", "Marco")))
+		response := []byte(localizer.AutoT(r, true, "GEM", "Marco"))
+		w.Write(response)
 	})
 
 	// http://localhost:8888/hardcoded?plural=true
 	http.HandleFunc("/hardcoded", func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
-		plural := r.FormValue("plural") != "true"
-		w.Write([]byte(localizer.T("it", plural, "GEM", "Marco")))
+		plural := r.FormValue("plural") == "true"
+		response := []byte(localizer.T("it", plural, "GEM", "Marco"))
+		w.Write(response)
 	})
 
 	log.Fatal(http.ListenAndServe(":8888", nil))

@@ -8,7 +8,7 @@
 [![MIT license](https://img.shields.io/badge/License-MIT-blue.svg)](https://lbesson.mit-license.org/)
 [![sprbox](https://img.shields.io/badge/sprbox-ready-green.svg)](https://github.com/oblq/sprbox)  
 
-**i18n** is a minimal, flexible and simple to use localizations package.  
+**i18n** is a minimal, flexible, simple to use and simple to embed (in your packages) localizations package.  
 It support yaml, json or toml localization files.
 
 i18n is ready to be used in sprbox.
@@ -49,7 +49,11 @@ localizer.GetLocaleOverride = func(r *http.Request) string {
 Automatically localize a key based on the http request, i18n will first look for the locale by the GetLocaleOverride func, then in cookies (`language` and/or `lang` keys), then in `Accept-Language` header:
 
 ```go
-localizer.AutoT(r, false, "MY_KEY")
+func(w http.ResponseWriter, r *http.Request) {
+	w.WriteHeader(http.StatusOK)
+	response := []byte(localizer.AutoT(r, false, "MY_KEY"))
+	w.Write(response)
+}
 ```
 
 Localize a key:
@@ -80,6 +84,49 @@ landingHandler := localizer.FileServer(
 mux.Handle("/", landingHandler)
 ```
 
+## Embed i18n in your package:
+
+```go
+package main
+
+import (
+		"github.com/oblq/i18n"
+		"golang.org/x/text/language"
+)
+
+const (
+	en = `
+GEM:
+  one: "Something went wrong, please try again later %s"
+  other: "Some things went wrong, please try again later %s"
+`
+
+	it = `
+GEM:
+  one: "Qualcosa è andato storto, riprova più tardi %s"
+  other: "Alcune cose sono andate storte, riprova più tardi %s"
+`
+)
+
+var localizer *i18n.I18n
+
+func init() {
+	hardcodedLocs := make(map[string][]byte)
+	hardcodedLocs[language.English.String()] = []byte(en)
+	hardcodedLocs[language.Italian.String()] = []byte(it)
+
+	localizer = i18n.NewI18n(
+		"",
+		&i18n.Config{
+			Locales: []string{
+				language.English.String(),
+				language.Italian.String(),
+			},
+			LocalizationsBytes: hardcodedLocs,
+		},
+	)
+}
+```
 ## Author
 
 - [Marco Muratori](mailto:marcomrtr@gmail.com) 

@@ -15,12 +15,10 @@ import (
 
 const (
 	// files type regexp
-	regexExt = `(?i)(.y(|a)ml|.toml|.json)` // `(?i)(\..{3,4})` //
-
-	// files type regexp
-	regexYAML = `(?i)(.y(|a)ml)`
-	regexTOML = `(?i)(.toml)`
-	regexJSON = `(?i)(.json)`
+	regexValidExt = `(?i)(.y(|a)ml|.toml|.json)` // `(?i)(\..{3,4})` //
+	regexYAML     = `(?i)(.y(|a)ml)`
+	regexTOML     = `(?i)(.toml)`
+	regexJSON     = `(?i)(.json)`
 
 	fileSearchCaseSensitive = false
 )
@@ -54,13 +52,13 @@ func walkConfigPath(configPath string, regex *regexp.Regexp) (matchedFile string
 	return
 }
 
-// getLocalizationFiles will search for the given file in the given path
+// findLocalizationFiles will search for the given file in the given path
 // returning all the eligible files (eg.: <path>/en.yaml or <path>/en.json)
 //
 // 'files' can also be passed without file extension,
 // configFiles is agnostic and will match any
 // supported extension in that case.
-func getLocalizationFiles(files ...string) (foundFiles []string) {
+func findLocalizationFiles(files ...string) (foundFiles []string, err error) {
 	for _, file := range files {
 		configPath, fileName := filepath.Split(file)
 		if len(configPath) == 0 {
@@ -72,7 +70,7 @@ func getLocalizationFiles(files ...string) (foundFiles []string) {
 		ext := filepath.Ext(fileName)
 		extTrimmed := strings.TrimSuffix(fileName, ext)
 		if len(ext) == 0 {
-			ext = regexExt
+			ext = regexValidExt
 		}
 
 		format := "^%s%s$"
@@ -87,40 +85,98 @@ func getLocalizationFiles(files ...string) (foundFiles []string) {
 		}
 	}
 
+	if len(foundFiles) == 0 {
+		return foundFiles, fmt.Errorf("no localization file found for '%s'", strings.Join(files, " | "))
+	}
 	return
 }
 
-// LoadLocalization will unmarshal all the matched
-// localization files to the passed interface.
-func LoadLocalization(config interface{}, files ...string) (err error) {
-	foundFiles := getLocalizationFiles(files...)
-	if len(foundFiles) == 0 {
-		return fmt.Errorf("[i18n] no localization file found for '%s'", strings.Join(files, " | "))
-	}
+func unmarshalJSON(data []byte, loc interface{}) (err error) {
+	return json.Unmarshal(data, loc)
+}
 
-	for _, file := range foundFiles {
-		var in []byte
-		if in, err = ioutil.ReadFile(file); err != nil {
-			return err
-		}
+func unmarshalTOML(data []byte, loc interface{}) (err error) {
+	_, err = toml.Decode(string(data), loc)
+	return err
+}
 
-		ext := filepath.Ext(file)
+func unmarshalYAML(data []byte, loc interface{}) (err error) {
+	return yaml.Unmarshal(data, loc)
+}
 
-		switch {
-		case regexp.MustCompile(regexYAML).MatchString(ext):
-			err = yaml.Unmarshal(in, config)
-		case regexp.MustCompile(regexTOML).MatchString(ext):
-			_, err = toml.Decode(string(in), config)
-		case regexp.MustCompile(regexJSON).MatchString(ext):
-			err = json.Unmarshal(in, config)
-		default:
-			err = fmt.Errorf("[i18n] unknown data format, can't unmarshal file: '%s'", file)
-		}
+// LoadLocalizationFiles will unmarshal all the matched
+// localization files for the given i18n.Tags in the i18n.Config.LocalizationsPath,
+// localization files must be named as the <language.Tag>.String()
+// (locale, eg.: `en.yml` for `language.English`).
+func (i18n *I18n) LoadLocalizationFiles() (err error) {
+	i18n.localizations = make(map[string]map[string]Localization)
 
+	for _, lang := range i18n.Tags {
+		var langLocalizations map[string]Localization
+		locFileName := filepath.Join(i18n.Config.LocalizationsPath, lang.String())
+		foundFiles, err := findLocalizationFiles(locFileName)
 		if err != nil {
 			return err
 		}
+
+		for _, file := range foundFiles {
+			var data []byte
+			if data, err = ioutil.ReadFile(file); err != nil {
+				return err
+			}
+
+			ext := filepath.Ext(file)
+
+			switch {
+			case regexp.MustCompile(regexYAML).MatchString(ext):
+				err = unmarshalYAML(data, &langLocalizations)
+			case regexp.MustCompile(regexTOML).MatchString(ext):
+				err = unmarshalTOML(data, &langLocalizations)
+			case regexp.MustCompile(regexJSON).MatchString(ext):
+				err = unmarshalJSON(data, &langLocalizations)
+			default:
+				err = fmt.Errorf("unknown data format, can't unmarshal file: '%s'", file)
+			}
+
+			if err != nil {
+				return err
+			}
+		}
+
+		i18n.localizations[lang.String()] = langLocalizations
 	}
 
-	return nil
+	return
+}
+
+// UnmarshalLocalizationBytes will unmarshal []byte to
+// a *map[string]localization for yaml, toml and json data formats.
+func (i18n *I18n) UnmarshalLocalizationBytes(localizationData map[string][]byte) (err error) {
+	i18n.localizations = make(map[string]map[string]Localization)
+
+	for _, lang := range i18n.Tags {
+
+		data, ok := localizationData[lang.String()]
+		if !ok {
+			return fmt.Errorf("no localization data found for locale '%s'", lang.String())
+		}
+
+		var langLocalizations map[string]Localization
+
+		switch {
+		case unmarshalJSON(data, &langLocalizations) == nil:
+			break
+		case unmarshalYAML(data, &langLocalizations) == nil:
+			break
+		case unmarshalTOML(data, &langLocalizations) == nil:
+			break
+		default:
+			return fmt.Errorf("the provided data is incompatible with an interface of type %T:\n%s",
+				langLocalizations, strings.TrimSuffix(string(data), "\n"))
+		}
+
+		i18n.localizations[lang.String()] = langLocalizations
+	}
+
+	return
 }

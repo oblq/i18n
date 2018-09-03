@@ -1,11 +1,10 @@
 package i18n
 
 import (
+	"errors"
 	"io/ioutil"
 	"log"
 	"net/http"
-
-	"github.com/go-errors/errors"
 
 	"github.com/oblq/sprbox"
 	"golang.org/x/text/language"
@@ -19,7 +18,7 @@ type Config struct {
 	Locales []string
 
 	// LocalizationsBytes contains the hardcoded localizations files.
-	LocalizationsBytes map[string][]byte
+	LocalizationsMap map[string]string
 
 	// LocalizationsPath is the path of localization files.
 	LocalizationsPath string
@@ -55,9 +54,9 @@ type I18n struct {
 	localizedHandlers map[string]http.Handler
 }
 
-// NewI18n create a new instance of i18n.
+// New create a new instance of i18n.
 // configFilePath take precedence over config.
-func NewI18n(configFilePath string, config *Config) *I18n {
+func New(configFilePath string, config *Config) *I18n {
 	if config == nil {
 		config = &Config{}
 	}
@@ -95,8 +94,8 @@ func (i18n *I18n) setup() error {
 	i18n.Tags = parseLocalesToTags(i18n.Config.Locales)
 	i18n.matcher = language.NewMatcher(i18n.Tags)
 
-	if len(i18n.Config.LocalizationsBytes) > 0 {
-		return i18n.UnmarshalLocalizationBytes(i18n.Config.LocalizationsBytes)
+	if len(i18n.Config.LocalizationsMap) > 0 {
+		return i18n.UnmarshalLocalizationMap(i18n.Config.LocalizationsMap)
 	} else if len(i18n.Config.LocalizationsPath) > 0 {
 		return i18n.LoadLocalizationFiles()
 	} else {

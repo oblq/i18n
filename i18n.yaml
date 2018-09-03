@@ -1,0 +1,10 @@
+# default language must go in the first place
+locales:
+  - en
+  - it
+
+# path of localization files, set this or `localizationsmap`
+localizationspath: example/i18n
+
+# map with hardcoded localizations, set this or `localizationspath`
+localizationsmap:

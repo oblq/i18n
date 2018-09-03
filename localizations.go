@@ -149,14 +149,14 @@ func (i18n *I18n) LoadLocalizationFiles() (err error) {
 	return
 }
 
-// UnmarshalLocalizationBytes will unmarshal []byte to
+// UnmarshalLocalizationMap will unmarshal map[string]string to
 // a *map[string]localization for yaml, toml and json data formats.
-func (i18n *I18n) UnmarshalLocalizationBytes(localizationData map[string][]byte) (err error) {
+func (i18n *I18n) UnmarshalLocalizationMap(localizationData map[string]string) (err error) {
 	i18n.localizations = make(map[string]map[string]Localization)
 
 	for _, lang := range i18n.Tags {
 
-		data, ok := localizationData[lang.String()]
+		dataString, ok := localizationData[lang.String()]
 		if !ok {
 			return fmt.Errorf("no localization data found for locale '%s'", lang.String())
 		}
@@ -164,15 +164,15 @@ func (i18n *I18n) UnmarshalLocalizationBytes(localizationData map[string][]byte)
 		var langLocalizations map[string]Localization
 
 		switch {
-		case unmarshalJSON(data, &langLocalizations) == nil:
+		case unmarshalJSON([]byte(dataString), &langLocalizations) == nil:
 			break
-		case unmarshalYAML(data, &langLocalizations) == nil:
+		case unmarshalYAML([]byte(dataString), &langLocalizations) == nil:
 			break
-		case unmarshalTOML(data, &langLocalizations) == nil:
+		case unmarshalTOML([]byte(dataString), &langLocalizations) == nil:
 			break
 		default:
 			return fmt.Errorf("the provided data is incompatible with an interface of type %T:\n%s",
-				langLocalizations, strings.TrimSuffix(string(data), "\n"))
+				langLocalizations, strings.TrimSuffix(dataString, "\n"))
 		}
 
 		i18n.localizations[lang.String()] = langLocalizations

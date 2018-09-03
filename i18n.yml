@@ -1,5 +1,0 @@
-# default language must go in the first place
-locales:
-  - en
-  - it
-localizations_path: static/i18n

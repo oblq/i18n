@@ -8,11 +8,11 @@ import (
 )
 
 func main() {
-	localizer := i18n.NewI18n(
+	localizer := i18n.New(
 		"",
 		&i18n.Config{
 			Locales:           []string{"en", "it"},
-			LocalizationsPath: "./example/localizations",
+			LocalizationsPath: "./example/i18n",
 		},
 	)
 

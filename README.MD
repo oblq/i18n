@@ -22,27 +22,34 @@ $ go get github.com/oblq/i18n
 ## Quickstart
 Get a new instance:
 ```go
-localizer := i18n.NewI18n(
-    "", // optionally pass the config file path and nil config
-    &i18n.Config{
-        Locales: []string{
-        	language.English.String(), // "en"
-        	language.Italian.String(), // "it"
-        },
-        LocalizationsPath: "./example/localizations",
-    },
+package main
+
+import (
+		"github.com/oblq/i18n"
+		"golang.org/x/text/language"
 )
+
+func init() {
+	// Optionally pass the config file path and nil config.
+	// The config file can be in yaml, json or toml format.
+    localizer := i18n.New(
+        "",
+        &i18n.Config{
+            Locales: []string{
+                language.English.String(), // "en"
+                language.Italian.String(), // "it"
+            },
+            LocalizationsPath: "./example/localizations",
+        },
+    )	
+}
 ```
 
 Optionally override the GetLocale func to automatically determine the locale to be used from http requests (using i18n.AutoT func), if an empty string is returned the default method will be used anyway:
 ```go
 localizer.GetLocaleOverride = func(r *http.Request) string {
     user := Auth.UserFromRequest(r)
-    locale := ""
-    if user != nil {
-        Postgres.QueryRow("SELECT locale FROM user_data WHERE uid = $1", user.Uid).Scan(&locale)
-    }
-    return locale
+    return user.Locale
 }
 ```          
 
@@ -50,9 +57,9 @@ Automatically localize a key based on the http request, i18n will first look for
 
 ```go
 func(w http.ResponseWriter, r *http.Request) {
+	response := localizer.AutoT(r, false, "MY_KEY")
 	w.WriteHeader(http.StatusOK)
-	response := []byte(localizer.AutoT(r, false, "MY_KEY"))
-	w.Write(response)
+	w.Write([]byte(response))
 }
 ```
 
@@ -86,12 +93,13 @@ mux.Handle("/", landingHandler)
 
 ## Embed i18n in your package:
 
+Use hardcoded localizations, they can be a json, yaml or toml string:
 ```go
 package main
 
 import (
-		"github.com/oblq/i18n"
-		"golang.org/x/text/language"
+	"github.com/oblq/i18n"
+	"golang.org/x/text/language"
 )
 
 const (
@@ -111,18 +119,18 @@ GEM:
 var localizer *i18n.I18n
 
 func init() {
-	hardcodedLocs := make(map[string][]byte)
-	hardcodedLocs[language.English.String()] = []byte(en)
-	hardcodedLocs[language.Italian.String()] = []byte(it)
+	hardcodedLocs := make(map[string]string)
+	hardcodedLocs[language.English.String()] = en
+	hardcodedLocs[language.Italian.String()] = it
 
-	localizer = i18n.NewI18n(
+	localizer = i18n.New(
 		"",
 		&i18n.Config{
 			Locales: []string{
 				language.English.String(),
 				language.Italian.String(),
 			},
-			LocalizationsBytes: hardcodedLocs,
+			LocalizationsMap: hardcodedLocs,
 		},
 	)
 }

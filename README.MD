@@ -135,6 +135,13 @@ func init() {
 	)
 }
 ```
+
+## Vendored packages
+
+- [`golang.org/x/text/language`](golang.org/x/text/language)
+- [`gopkg.in/yaml.v2`](https://github.com/go-yaml/yaml)  
+- [`github.com/BurntSushi/toml`](https://github.com/BurntSushi/toml)
+
 ## Author
 
 - [Marco Muratori](mailto:marcomrtr@gmail.com) 

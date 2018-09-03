@@ -25,14 +25,14 @@ Get a new instance:
 package main
 
 import (
-		"github.com/oblq/i18n"
-		"golang.org/x/text/language"
+	"github.com/oblq/i18n"
+	"golang.org/x/text/language"
 )
 
 func init() {
 	// Optionally pass the config file path and nil config.
 	// The config file can be in yaml, json or toml format.
-    localizer := i18n.New(
+	localizer := i18n.New(
         "",
         &i18n.Config{
             Locales: []string{
@@ -86,7 +86,8 @@ landingHandler := localizer.FileServer(
     map[string]http.Handler{
         language.English.String(): http.FileServer(http.Dir("./landing_en")),
         language.Italian.String(): http.FileServer(http.Dir("./landing_ita")),
-    })
+    }, 
+)
 
 mux.Handle("/", landingHandler)
 ```

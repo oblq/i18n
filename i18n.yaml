@@ -1,4 +1,5 @@
-# default language must go in the first place
+# The default language must go in the first place,
+# they must be ordered from the most preferred to te least one.
 locales:
   - en
   - it

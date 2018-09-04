@@ -57,7 +57,7 @@ Automatically localize a key based on the http request, i18n will first look for
 
 ```go
 func(w http.ResponseWriter, r *http.Request) {
-	response := localizer.AutoT(r, false, "MY_KEY")
+	response := localizer.AutoT(r, "MY_KEY")
 	w.WriteHeader(http.StatusOK)
 	w.Write([]byte(response))
 }
@@ -65,7 +65,7 @@ func(w http.ResponseWriter, r *http.Request) {
 
 Localize a key:
 ```go
-localizer.T("en", false, "MY_KEY")
+localizer.T("en", "MY_KEY")
 ```
          
 Optionally pass parameters to be parsed with fmt package, given the `en.yaml` localization file: 
@@ -77,7 +77,7 @@ Optionally pass parameters to be parsed with fmt package, given the `en.yaml` lo
 
 ...localize a key using plural and multiple parameters:
 ```go
-localizer.T("en", true, "SAY_HELLO", "Marco", "Valentina") // -> "Hello, Marco and Valentina!"
+localizer.TP("en", true, "SAY_HELLO", "Marco", "Valentina") // -> "Hello, Marco and Valentina!"
 ```
          
 ## Localized file server:

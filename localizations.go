@@ -108,12 +108,12 @@ func unmarshalYAML(data []byte, loc interface{}) (err error) {
 // localization files for the given i18n.Tags in the i18n.Config.LocalizationsPath,
 // localization files must be named as the <language.Tag>.String()
 // (locale, eg.: `en.yml` for `language.English`).
-func (i18n *I18n) LoadLocalizationFiles() (err error) {
+func (i18n *I18n) LoadLocalizationFiles(localizationsPath string) (err error) {
 	i18n.localizations = make(map[string]map[string]Localization)
 
 	for _, lang := range i18n.Tags {
 		var langLocalizations map[string]Localization
-		locFileName := filepath.Join(i18n.Config.LocalizationsPath, lang.String())
+		locFileName := filepath.Join(localizationsPath, lang.String())
 		foundFiles, err := findLocalizationFiles(locFileName)
 		if err != nil {
 			return err
@@ -149,9 +149,9 @@ func (i18n *I18n) LoadLocalizationFiles() (err error) {
 	return
 }
 
-// UnmarshalLocalizationMap will unmarshal map[string]string to
+// LoadLocalizationMap will unmarshal map[string]string to
 // a *map[string]localization for yaml, toml and json data formats.
-func (i18n *I18n) UnmarshalLocalizationMap(localizationData map[string]string) (err error) {
+func (i18n *I18n) LoadLocalizationMap(localizationData map[string]string) (err error) {
 	i18n.localizations = make(map[string]map[string]Localization)
 
 	for _, lang := range i18n.Tags {

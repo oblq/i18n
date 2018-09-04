@@ -18,13 +18,13 @@ func main() {
 
 	http.HandleFunc("/one", func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
-		response := []byte(localizer.AutoT(r, false, "GEM", "Marco"))
+		response := []byte(localizer.AutoT(r, "GEM", "Marco"))
 		w.Write(response)
 	})
 
 	http.HandleFunc("/other", func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
-		response := []byte(localizer.AutoT(r, true, "GEM", "Marco"))
+		response := []byte(localizer.AutoTP(r, true, "GEM", "Marco"))
 		w.Write(response)
 	})
 
@@ -32,7 +32,7 @@ func main() {
 	http.HandleFunc("/hardcoded", func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
 		plural := r.FormValue("plural") == "true"
-		response := []byte(localizer.T("it", plural, "GEM", "Marco"))
+		response := []byte(localizer.TP("it", plural, "GEM", "Marco"))
 		w.Write(response)
 	})
 

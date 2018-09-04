@@ -25,7 +25,7 @@ func TestNew(t *testing.T) {
 	locConfigFile := New("./i18n.yaml", nil)
 	assert.Equal(
 		t,
-		locConfigFile.T("en", false, "GEM", "Marco"),
+		locConfigFile.T("en", "GEM", "Marco"),
 		"Something went wrong, please try again later Marco",
 		"wrong localization")
 
@@ -41,7 +41,7 @@ func TestNew(t *testing.T) {
 	)
 	assert.Equal(
 		t,
-		locConfigPath.T("en", false, "GEM", "Marco"),
+		locConfigPath.T("en", "GEM", "Marco"),
 		"Something went wrong, please try again later Marco",
 		"wrong localization")
 
@@ -61,13 +61,13 @@ func TestNew(t *testing.T) {
 	)
 	assert.Equal(
 		t,
-		locConfigMap.T("en", false, "GEM", "Marco"),
+		locConfigMap.TP("en", false, "GEM", "Marco"),
 		"Something went wrong, please try again later Marco",
 		"wrong localization")
 
 	assert.Equal(
 		t,
-		locConfigMap.T("en", true, "GEM", "Marco"),
+		locConfigMap.TP("en", true, "GEM", "Marco"),
 		"Some things went wrong, please try again later Marco",
 		"wrong localization")
 }

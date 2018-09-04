@@ -14,14 +14,13 @@ const (
 	headerKey = "Accept-Language"
 )
 
-// GetLocale return the request language.Tag.
-//  <language.Tag>.String() // -> locale
-// It first look for the locale by the GetLocaleOverride func,
-// then in cookies ("language" and/or "lang" keys),
-// then in 'Accept-Language' header.
-func (i18n *I18n) GetLocale(r *http.Request) language.Tag {
-	locale := ""
-
+// getLocale return the request locale.
+// It first look for the locale by the
+// GetLocaleOverride func (if defined),
+// then if locale is empty it will look in:
+// - cookies ("language" and/or "lang" keys)
+// - 'Accept-Language' header
+func (i18n *I18n) getLocale(r *http.Request) (locale string) {
 	if i18n.GetLocaleOverride != nil {
 		locale = i18n.GetLocaleOverride(r)
 	}
@@ -35,6 +34,18 @@ func (i18n *I18n) GetLocale(r *http.Request) language.Tag {
 			locale = acceptLang
 		}
 	}
+	return
+}
+
+// GetLanguageTag return the request language.Tag.
+// A recognized tag is always returned.
+//  <language.Tag>.String() // -> locale
+// It first look for the request locale (GetLocale func),
+// then it will look for the corresponding language.Tag
+// in the i18n predefined Tags, if no tag is matched
+// the first one will be returned.
+func (i18n *I18n) GetLanguageTag(r *http.Request) language.Tag {
+	locale := i18n.getLocale(r)
 
 	t, _, _ := language.ParseAcceptLanguage(locale) // We ignore the error: the default language will be selected for t == nil.
 	// we don't return tag anymore since it has some bugs, we can retrieve it from supported languages with index

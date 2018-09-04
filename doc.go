@@ -16,11 +16,7 @@
 // if an empty string is returned the default method will be used anyway:
 //  localizer.GetLocaleOverride = func(r *http.Request) string {
 // 		user := Auth.UserFromRequest(r)
-// 		locale := ""
-// 		if user != nil {
-//			Postgres.QueryRow("SELECT locale FROM user_data WHERE uid = $1", user.Uid).Scan(&locale)
-// 		}
-// 		return locale
+// 		return user.Locale
 //  }
 //
 // Localize a key based on the http request,

@@ -35,19 +35,22 @@ type I18n struct {
 	// Config struct
 	Config *Config
 
-	// GetLocaleOverride override the default method to get the user locale.
-	// If nothing is returned the default method will be called anyway.
+	// GetLocaleOverride override the default method
+	// to get the http request locale.
+	// If nothing is returned the default method will be
+	// called anyway (request's cookies and header).
 	GetLocaleOverride func(r *http.Request) string `json:"-"`
 
 	// Tags is automatically generated using Config.Locales.
-	// The first one is the default, they must be ordered from the most preferred to te least one.
+	// The first one is the default, they must be
+	// ordered from the most preferred to te least one.
 	Tags []language.Tag
 
 	// matcher is a language.Matcher configured for all supported languages.
 	// Automatically generated using Config.Locales.
 	matcher language.Matcher
 
-	// language, key -> Localization
+	// localizations[<language>][<key>] -> Localization
 	localizations map[string]map[string]Localization
 
 	// localizedHandlers is used by the FileServer
@@ -95,9 +98,9 @@ func (i18n *I18n) setup() error {
 	i18n.matcher = language.NewMatcher(i18n.Tags)
 
 	if len(i18n.Config.LocalizationsMap) > 0 {
-		return i18n.UnmarshalLocalizationMap(i18n.Config.LocalizationsMap)
+		return i18n.LoadLocalizationMap(i18n.Config.LocalizationsMap)
 	} else if len(i18n.Config.LocalizationsPath) > 0 {
-		return i18n.LoadLocalizationFiles()
+		return i18n.LoadLocalizationFiles(i18n.Config.LocalizationsPath)
 	} else {
 		return errors.New("Config.LocalizationsBytes or Config.LocalizationsPath must be provided")
 	}

@@ -22,7 +22,7 @@ func (i18n *I18n) FileServer(handlers map[string]http.Handler) *I18n {
 }
 
 func (i18n *I18n) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	locale := i18n.GetLocale(r).String()
+	locale := i18n.GetLanguageTag(r).String()
 	if handler, ok := i18n.localizedHandlers[locale]; ok {
 		handler.ServeHTTP(w, r)
 	} else {

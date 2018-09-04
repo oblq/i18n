@@ -14,13 +14,13 @@ const (
 	headerKey = "Accept-Language"
 )
 
-// getLocale return the request locale.
+// getLocaleUnsafe return the request locale.
 // It first look for the locale by the
 // GetLocaleOverride func (if defined),
 // then if locale is empty it will look in:
 // - cookies ("language" and/or "lang" keys)
 // - 'Accept-Language' header
-func (i18n *I18n) getLocale(r *http.Request) (locale string) {
+func (i18n *I18n) getLocaleUnsafe(r *http.Request) (locale string) {
 	if i18n.GetLocaleOverride != nil {
 		locale = i18n.GetLocaleOverride(r)
 	}
@@ -45,7 +45,7 @@ func (i18n *I18n) getLocale(r *http.Request) (locale string) {
 // in the i18n predefined Tags, if no tag is matched
 // the first one will be returned.
 func (i18n *I18n) GetLanguageTag(r *http.Request) language.Tag {
-	locale := i18n.getLocale(r)
+	locale := i18n.getLocaleUnsafe(r)
 
 	t, _, _ := language.ParseAcceptLanguage(locale) // We ignore the error: the default language will be selected for t == nil.
 	// we don't return tag anymore since it has some bugs, we can retrieve it from supported languages with index
@@ -56,6 +56,12 @@ func (i18n *I18n) GetLanguageTag(r *http.Request) language.Tag {
 		return i18n.Tags[i]
 	}
 	return i18n.Tags[0]
+}
+
+// GetLocale return GetLanguageTag(r).String()
+// It always return a valid result.
+func (i18n *I18n) GetLocale(r *http.Request) (locale string) {
+	return i18n.GetLanguageTag(r).String()
 }
 
 // parseLocalesToTags convert an array of locales to an array of language.Tag.

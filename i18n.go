@@ -17,11 +17,11 @@ type Config struct {
 	// A localization file for any given locale must be provided.
 	Locales []string
 
-	// LocalizationsBytes contains the hardcoded localizations files.
-	LocalizationsMap map[string]string
-
 	// LocalizationsPath is the path of localization files.
 	LocalizationsPath string
+
+	// LocalizationsBytes contains the hardcoded localizations files.
+	LocalizationsMap map[string]string
 }
 
 // Localization represent a key value with localized strings
@@ -82,15 +82,11 @@ func New(configFilePath string, config *Config) *I18n {
 }
 
 // SpareConfig is the sprbox 'configurable' interface implementation.
-func (i18n *I18n) SpareConfig(configFiles []string) error {
-	if err := sprbox.LoadConfig(&i18n.Config, configFiles...); err != nil {
-		return err
+func (i18n *I18n) SpareConfig(configFiles []string) (err error) {
+	if err = sprbox.LoadConfig(&i18n.Config, configFiles...); err == nil {
+		err = i18n.setup()
 	}
-	if err := i18n.setup(); err != nil {
-		return err
-	}
-
-	return nil
+	return
 }
 
 func (i18n *I18n) setup() error {

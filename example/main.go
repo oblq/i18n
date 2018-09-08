@@ -50,6 +50,7 @@ func main() {
 	fmt.Println("Try: http://localhost:8888/one")
 	fmt.Println("Try: http://localhost:8888/other")
 	fmt.Println("Try: http://localhost:8888/manual?plural=true")
+	fmt.Println("Try: http://localhost:8888/")
 
 	log.Fatal(http.ListenAndServe(":8888", nil))
 }

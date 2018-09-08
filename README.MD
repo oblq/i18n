@@ -105,7 +105,7 @@ import (
 
 // keys
 const (
-	GEM = "generic_error_message"
+	GEM = "GEM" // generic_error_message
 )
 
 var hardcodedLocs = map[string]map[string]i18n.Localization{

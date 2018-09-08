@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"log"
 	"net/http"
 
@@ -11,9 +12,10 @@ func main() {
 	localizer := i18n.New(
 		"",
 		&i18n.Config{
-			Locales:           []string{"en", "it"},
-			LocalizationsPath: "./example/i18n",
+			Locales: []string{"en", "it"},
+			Path:    "./example/i18n",
 		},
+		nil,
 	)
 
 	http.HandleFunc("/one", func(w http.ResponseWriter, r *http.Request) {
@@ -28,13 +30,17 @@ func main() {
 		w.Write(response)
 	})
 
-	// http://localhost:8888/hardcoded?plural=true
-	http.HandleFunc("/hardcoded", func(w http.ResponseWriter, r *http.Request) {
+	// http://localhost:8888/manual?plural=true
+	http.HandleFunc("/manual", func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
 		plural := r.FormValue("plural") == "true"
 		response := []byte(localizer.TP("it", plural, "GEM", "Marco"))
 		w.Write(response)
 	})
+
+	fmt.Println("Try: http://localhost:8888/one")
+	fmt.Println("Try: http://localhost:8888/other")
+	fmt.Println("Try: http://localhost:8888/manual?plural=true")
 
 	log.Fatal(http.ListenAndServe(":8888", nil))
 }

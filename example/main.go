@@ -6,6 +6,7 @@ import (
 	"net/http"
 
 	"github.com/oblq/i18n"
+	"golang.org/x/text/language"
 )
 
 func main() {
@@ -15,7 +16,6 @@ func main() {
 			Locales: []string{"en", "it"},
 			Path:    "./example/i18n",
 		},
-		nil,
 	)
 
 	http.HandleFunc("/one", func(w http.ResponseWriter, r *http.Request) {
@@ -37,6 +37,15 @@ func main() {
 		response := []byte(localizer.TP("it", plural, "GEM", "Marco"))
 		w.Write(response)
 	})
+
+	// localized FileServer
+	localizer.SetFileServer(
+		map[string]http.Handler{
+			language.English.String(): http.FileServer(http.Dir("./web_en")),
+			language.Italian.String(): http.FileServer(http.Dir("./web_ita")),
+		},
+	)
+	http.Handle("/", localizer)
 
 	fmt.Println("Try: http://localhost:8888/one")
 	fmt.Println("Try: http://localhost:8888/other")

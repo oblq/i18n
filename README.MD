@@ -39,7 +39,7 @@ func init() {
                 language.English.String(), // "en"
                 language.Italian.String(), // "it"
             },
-            LocalizationsPath: "./example/localizations",
+            Path: "./example/localizations",
         },
     )	
 }
@@ -48,7 +48,7 @@ func init() {
 Optionally override the GetLocale func to automatically determine the locale to be used from http requests (using i18n.AutoT func), if an empty string is returned the default method will be used anyway:
 ```go
 localizer.GetLocaleOverride = func(r *http.Request) string {
-    user := Auth.UserFromRequest(r)
+    user := AuthLib.UserFromRequest(r)
     return user.Locale
 }
 ```          
@@ -82,14 +82,14 @@ localizer.TP("en", true, "SAY_HELLO", "Marco", "Valentina") // -> "Hello, Marco 
          
 ## Localized file server:
 ```go
-landingHandler := localizer.FileServer(
+localizer.SetFileServer(
     map[string]http.Handler{
         language.English.String(): http.FileServer(http.Dir("./landing_en")),
         language.Italian.String(): http.FileServer(http.Dir("./landing_ita")),
     }, 
 )
 
-mux.Handle("/", landingHandler)
+mux.Handle("/", localizer)
 ```
 
 ## Embed i18n in your package:
@@ -126,16 +126,13 @@ var hardcodedLocs = map[string]map[string]i18n.Localization{
 var localizer *i18n.I18n
 
 func init() {
-	localizer = i18n.New(
-		"",
-		&i18n.Config{
-			Locales: []string{
-				language.English.String(),
-				language.Italian.String(),
-			},
-			LocalizationsMap: hardcodedLocs,
+	localizer := i18n.New("", &i18n.Config{
+		Locales: []string{
+			language.English.String(), // "en"
+			language.Italian.String(), // "it"
 		},
-	)
+		Locs: hardcodedLocs,
+	})
 }
 ```
 

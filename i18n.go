@@ -112,6 +112,6 @@ func (i18n *I18n) setup() error {
 		i18n.localizations = i18n.Config.Locs
 		return nil
 	} else {
-		return errors.New("configFilePath or config or locs: one of the three must be provided")
+		return errors.New("configFilePath or config or locs: one of the two must be provided")
 	}
 }

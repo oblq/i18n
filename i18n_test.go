@@ -91,8 +91,8 @@ func TestI18n_FileServer(t *testing.T) {
 	})
 	localizer.SetFileServer(
 		map[string]http.Handler{
-			language.English.String(): http.FileServer(http.Dir("./example/web_en")),
-			language.Italian.String(): http.FileServer(http.Dir("./example/web_it")),
+			language.English.String(): http.FileServer(http.Dir("./example/web/en")),
+			language.Italian.String(): http.FileServer(http.Dir("./example/web/it")),
 		},
 	)
 

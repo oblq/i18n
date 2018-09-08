@@ -41,8 +41,8 @@ func main() {
 	// localized FileServer
 	localizer.SetFileServer(
 		map[string]http.Handler{
-			language.English.String(): http.FileServer(http.Dir("./web_en")),
-			language.Italian.String(): http.FileServer(http.Dir("./web_ita")),
+			language.English.String(): http.FileServer(http.Dir("./example/web/en")),
+			language.Italian.String(): http.FileServer(http.Dir("./example/web/it")),
 		},
 	)
 	http.Handle("/", localizer)

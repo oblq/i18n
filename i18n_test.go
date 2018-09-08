@@ -8,27 +8,34 @@ import (
 )
 
 const (
-	en = `
-GEM:
-  one: "Something went wrong, please try again later %s"
-  other: "Some things went wrong, please try again later %s"
-`
-
-	it = `
-GEM:
-  one: "Qualcosa è andato storto, riprova più tardi %s"
-  other: "Alcune cose sono andate storte, riprova più tardi %s"
-`
+	GEM = "GEM" // generic_error_message
 )
 
-func TestNew(t *testing.T) {
-	locConfigFile := New("./i18n.yaml", nil)
+var hardcodedLocs = map[string]map[string]Localization{
+	language.English.String(): {
+		GEM: {
+			One:   "Something went wrong, please try again later %s",
+			Other: "Some things went wrong, please try again later %s",
+		},
+	},
+	language.Italian.String(): {
+		GEM: {
+			One:   "Qualcosa è andato storto, riprova più tardi %s",
+			Other: "Alcune cose sono andate storte, riprova più tardi %s",
+		},
+	},
+}
+
+func TestNewConfigFilePath(t *testing.T) {
+	locConfigFile := New("./i18n.yaml", nil, nil)
 	assert.Equal(
 		t,
-		locConfigFile.T("en", "GEM", "Marco"),
+		locConfigFile.T("en", GEM, "Marco"),
 		"Something went wrong, please try again later Marco",
 		"wrong localization")
+}
 
+func TestNewConfig(t *testing.T) {
 	locConfigPath := New(
 		"",
 		&Config{
@@ -36,38 +43,29 @@ func TestNew(t *testing.T) {
 				language.English.String(),
 				language.Italian.String(),
 			},
-			LocalizationsPath: "./example/i18n",
+			Path: "./example/i18n",
 		},
+		nil,
 	)
 	assert.Equal(
 		t,
-		locConfigPath.T("en", "GEM", "Marco"),
+		locConfigPath.T("en", GEM, "Marco"),
 		"Something went wrong, please try again later Marco",
 		"wrong localization")
+}
 
-	hardcodedLocs := make(map[string]string)
-	hardcodedLocs[language.English.String()] = en
-	hardcodedLocs[language.Italian.String()] = it
+func TestNewLocs(t *testing.T) {
 	// Will throw `log.Fatal()` if an error occour.
-	locConfigMap := New(
-		"",
-		&Config{
-			Locales: []string{
-				language.English.String(),
-				language.Italian.String(),
-			},
-			LocalizationsMap: hardcodedLocs,
-		},
-	)
+	locConfigMap := New("", nil, hardcodedLocs)
 	assert.Equal(
 		t,
-		locConfigMap.TP("en", false, "GEM", "Marco"),
+		locConfigMap.TP("en", false, GEM, "Marco"),
 		"Something went wrong, please try again later Marco",
 		"wrong localization")
 
 	assert.Equal(
 		t,
-		locConfigMap.TP("en", true, "GEM", "Marco"),
+		locConfigMap.TP("en", true, GEM, "Marco"),
 		"Some things went wrong, please try again later Marco",
 		"wrong localization")
 }

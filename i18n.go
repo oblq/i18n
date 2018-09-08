@@ -17,11 +17,8 @@ type Config struct {
 	// A localization file for any given locale must be provided.
 	Locales []string
 
-	// LocalizationsPath is the path of localization files.
-	LocalizationsPath string
-
-	// LocalizationsBytes contains the hardcoded localizations files.
-	LocalizationsMap map[string]string
+	// Path is the path of localization files.
+	Path string
 }
 
 // Localization represent a key value with localized strings
@@ -58,15 +55,28 @@ type I18n struct {
 }
 
 // New create a new instance of i18n.
-// configFilePath take precedence over config.
-func New(configFilePath string, config *Config) *I18n {
-	if config == nil {
-		config = &Config{}
-	}
-
+// 1. configFilePath is the path of the config file (like i18n.yaml in the root).
+// 2. config is a config struct provided at run-time.
+// 3. locs contains hardcoded localizations.
+//
+// Use 1 or 2 if you have localizations files in a predefined
+// path, files will be searched by locales automatically.
+//
+// Use 3 if you want to use hardcoded localizations,
+// useful to embed i18n in other library packages.
+//
+// `configFilePath` take precedence over `config` which takes precedence over `locs`.
+//
+// The order of Config.Locales or locs[<locale>] is important,
+// they must be ordered from the most preferred to te least one,
+// the first one is the default.
+func New(configFilePath string, config *Config, locs map[string]map[string]Localization) *I18n {
 	i18n := &I18n{Config: config}
 
 	if len(configFilePath) > 0 {
+		if i18n.Config == nil {
+			i18n.Config = &Config{}
+		}
 		if compsConfigFile, err := ioutil.ReadFile(configFilePath); err != nil {
 			log.Fatalln("Wrong config path", err)
 		} else if err = sprbox.Unmarshal(compsConfigFile, i18n.Config); err != nil {
@@ -74,7 +84,7 @@ func New(configFilePath string, config *Config) *I18n {
 		}
 	}
 
-	if err := i18n.setup(); err != nil {
+	if err := i18n.setup(locs); err != nil {
 		log.Fatal("[i18n] error:", err.Error())
 	}
 
@@ -84,20 +94,26 @@ func New(configFilePath string, config *Config) *I18n {
 // SpareConfig is the sprbox 'configurable' interface implementation.
 func (i18n *I18n) SpareConfig(configFiles []string) (err error) {
 	if err = sprbox.LoadConfig(&i18n.Config, configFiles...); err == nil {
-		err = i18n.setup()
+		err = i18n.setup(nil)
 	}
 	return
 }
 
-func (i18n *I18n) setup() error {
-	i18n.Tags = parseLocalesToTags(i18n.Config.Locales)
-	i18n.matcher = language.NewMatcher(i18n.Tags)
-
-	if len(i18n.Config.LocalizationsMap) > 0 {
-		return i18n.LoadLocalizationMap(i18n.Config.LocalizationsMap)
-	} else if len(i18n.Config.LocalizationsPath) > 0 {
-		return i18n.LoadLocalizationFiles(i18n.Config.LocalizationsPath)
+func (i18n *I18n) setup(locs map[string]map[string]Localization) error {
+	if i18n.Config != nil {
+		i18n.Tags = parseLocalesToTags(i18n.Config.Locales)
+		i18n.matcher = language.NewMatcher(i18n.Tags)
+		return i18n.LoadLocalizationFiles(i18n.Config.Path)
+	} else if locs != nil {
+		locales := make([]string, 0)
+		for k := range locs {
+			locales = append(locales, k)
+		}
+		i18n.Tags = parseLocalesToTags(locales)
+		i18n.matcher = language.NewMatcher(i18n.Tags)
+		i18n.localizations = locs
+		return nil
 	} else {
-		return errors.New("Config.LocalizationsBytes or Config.LocalizationsPath must be provided")
+		return errors.New("configFilePath or config or locs: one of the three must be provided")
 	}
 }

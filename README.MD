@@ -103,27 +103,29 @@ import (
 	"golang.org/x/text/language"
 )
 
+// keys
 const (
-	en = `
-GEM:
-  one: "Something went wrong, please try again later %s"
-  other: "Some things went wrong, please try again later %s"
-`
-
-	it = `
-GEM:
-  one: "Qualcosa è andato storto, riprova più tardi %s"
-  other: "Alcune cose sono andate storte, riprova più tardi %s"
-`
+	GEM = "generic_error_message"
 )
+
+var hardcodedLocs = map[string]map[string]i18n.Localization{
+	language.English.String(): {
+		GEM: {
+			One:   "Something went wrong, please try again later %s",
+			Other: "Some things went wrong, please try again later %s",
+		},
+	},
+	language.Italian.String(): {
+		GEM: {
+			One:   "Qualcosa è andato storto, riprova più tardi %s",
+			Other: "Alcune cose sono andate storte, riprova più tardi %s",
+		},
+	},
+}
 
 var localizer *i18n.I18n
 
 func init() {
-	hardcodedLocs := make(map[string]string)
-	hardcodedLocs[language.English.String()] = en
-	hardcodedLocs[language.Italian.String()] = it
-
 	localizer = i18n.New(
 		"",
 		&i18n.Config{

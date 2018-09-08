@@ -2,7 +2,6 @@ package i18n
 
 import (
 	"fmt"
-	"log"
 	"net/http"
 )
 
@@ -35,11 +34,11 @@ func (i18n *I18n) T(locale string, key string, params ...interface{}) string {
 // then in 'Accept-Language' header.
 func (i18n *I18n) AutoT(r *http.Request, key string, params ...interface{}) string {
 	if r == nil {
-		log.Println("[i18n] http request nil, key:", key)
+		fmt.Println("[i18n] http request nil, key:", key)
 		return key
 	}
-	tag := i18n.GetLanguageTag(r)
-	return i18n.translate(tag.String(), false, key, params...)
+	locale := i18n.GetLocale(r)
+	return i18n.translate(locale, false, key, params...)
 }
 
 // TP translate the key based on the passed locale
@@ -55,9 +54,9 @@ func (i18n *I18n) TP(locale string, plural bool, key string, params ...interface
 // then in 'Accept-Language' header.
 func (i18n *I18n) AutoTP(r *http.Request, plural bool, key string, params ...interface{}) string {
 	if r == nil {
-		log.Println("[i18n] http request nil, key:", key)
+		fmt.Println("[i18n] http request nil, key:", key)
 		return key
 	}
-	tag := i18n.GetLanguageTag(r)
-	return i18n.translate(tag.String(), plural, key, params...)
+	locale := i18n.GetLocale(r)
+	return i18n.translate(locale, plural, key, params...)
 }

@@ -185,3 +185,28 @@ func TestNoLocalesPassed(t *testing.T) {
 		"Something went wrong, please try again later Marco",
 		"wrong localization")
 }
+
+func TestTranslate(t *testing.T) {
+	locConfigMap := New("", &Config{
+		Locales: []string{language.Italian.String()},
+		Locs:    hardcodedLocs,
+	})
+
+	r, _ := http.NewRequest("POST", "/", nil)
+	r.Header.Add(headerKey, "it")
+
+	assert.Equal(t,
+		"Qualcosa è andato storto, riprova più tardi Marco",
+		locConfigMap.AutoT(r, GEM, "Marco"),
+		"wrong localization")
+
+	assert.Equal(t,
+		"Qualcosa è andato storto, riprova più tardi Marco",
+		locConfigMap.AutoTP(r, false, GEM, "Marco"),
+		"wrong localization")
+
+	assert.Equal(t,
+		"Alcune cose sono andate storte, riprova più tardi Marco",
+		locConfigMap.AutoTP(r, true, GEM, "Marco"),
+		"wrong localization")
+}

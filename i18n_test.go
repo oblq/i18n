@@ -17,7 +17,7 @@ const (
 	GEM = "GEM" // generic_error_message
 )
 
-var hardcodedLocs = map[string]map[string]Localization{
+var hardcodedLocs = map[string]map[string]*Localization{
 	language.English.String(): {
 		GEM: {
 			One:   "Something went wrong, please try again later %s",

@@ -32,7 +32,7 @@ type Config struct {
 	// Locs contains hardcoded localizations.
 	// Use it if you want to use hardcoded localizations,
 	// useful to embed i18n in other library packages.
-	Locs map[string]map[string]Localization
+	Locs map[string]map[string]*Localization
 }
 
 // Localization represent a key value with localized strings
@@ -62,7 +62,7 @@ type I18n struct {
 	matcher language.Matcher
 
 	// localizations[<language>][<key>] -> Localization
-	localizations map[string]map[string]Localization
+	localizations map[string]map[string]*Localization
 
 	// localizedHandlers is used by the FileServer
 	localizedHandlers map[string]http.Handler

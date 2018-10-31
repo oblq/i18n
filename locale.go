@@ -21,6 +21,10 @@ const (
 // - cookies ("language" and/or "lang" keys)
 // - 'Accept-Language' header
 func (i18n *I18n) getLocaleUnsafe(r *http.Request) (locale string) {
+	if r == nil {
+		return
+	}
+
 	if i18n.GetLocaleOverride != nil {
 		locale = i18n.GetLocaleOverride(r)
 	}
@@ -66,7 +70,7 @@ func (i18n *I18n) GetLocale(r *http.Request) (locale string) {
 }
 
 // parseLocalesToTags convert an array of locales to an array of language.Tag.
-// If no language.Tag can be parsed by the provided locales
+// If no language.Tag can be parsed for the provided locales
 // then language.English will be returned by default in tags array.
 func parseLocalesToTags(locales []string) (tags []language.Tag) {
 	for _, locale := range locales {

@@ -1,0 +1,15 @@
+# github.com/BurntSushi/toml v0.3.1
+github.com/BurntSushi/toml
+# github.com/davecgh/go-spew v1.1.1
+github.com/davecgh/go-spew/spew
+# github.com/oblq/sprbox v1.5.0
+github.com/oblq/sprbox
+# github.com/pmezard/go-difflib v1.0.0
+github.com/pmezard/go-difflib/difflib
+# github.com/stretchr/testify v1.3.0
+github.com/stretchr/testify/assert
+# golang.org/x/text v0.3.0
+golang.org/x/text/internal/tag
+golang.org/x/text/language
+# gopkg.in/yaml.v2 v2.2.2
+gopkg.in/yaml.v2

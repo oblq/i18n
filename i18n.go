@@ -29,6 +29,7 @@ type Config struct {
 	// Path is the path of localization files.
 	// Files will be searched automatically based on Locales.
 	Path string
+
 	// Locs contains hardcoded localizations.
 	// Use it if you want to use hardcoded localizations,
 	// useful to embed i18n in other library packages.
@@ -69,22 +70,29 @@ type I18n struct {
 }
 
 // New create a new instance of i18n.
-// 1. configFilePath is the path of the config file (like i18n.yaml in the root).
-// 2. config is a config struct provided at run-time.
-//
-// Use 1 or 2, `configFilePath` take precedence over `config`.
-func New(configFilePath string, config *Config) *I18n {
+func NewWithConfig(config *Config) *I18n {
 	i18n := &I18n{Config: config}
 
-	if len(configFilePath) > 0 {
-		if i18n.Config == nil {
-			i18n.Config = &Config{}
-		}
-		if compsConfigFile, err := ioutil.ReadFile(configFilePath); err != nil {
-			log.Fatalln("Wrong config path", err)
-		} else if err = sprbox.Unmarshal(compsConfigFile, i18n.Config); err != nil {
-			log.Fatalln("Can't unmarshal config file", err)
-		}
+	if err := i18n.setup(); err != nil {
+		log.Fatal("[i18n] error:", err.Error())
+	}
+
+	return i18n
+}
+
+// New create a new instance of i18n.
+// configFilePath is the path of the config file (like i18n.yaml).
+func NewWithConfigFile(configFilePath string) *I18n {
+	i18n := &I18n{Config: &Config{}}
+
+	if len(configFilePath) == 0 {
+		log.Fatal("[i18n] error: invalid config file path")
+	}
+
+	if compsConfigFile, err := ioutil.ReadFile(configFilePath); err != nil {
+		log.Fatalln("Wrong config path", err)
+	} else if err = sprbox.Unmarshal(compsConfigFile, i18n.Config); err != nil {
+		log.Fatalln("Can't unmarshal config file", err)
 	}
 
 	if err := i18n.setup(); err != nil {

@@ -32,8 +32,7 @@ import (
 func init() {
 	// Optionally pass the config file path and nil config.
 	// The config file can be in yaml, json or toml format.
-	localizer := i18n.New(
-        "",
+	localizer := i18n.NewWithConfig(
         &i18n.Config{
             Locales: []string{
                 language.English.String(), // "en"
@@ -72,12 +71,12 @@ Optionally pass parameters to be parsed with fmt package, given the `en.yaml` lo
 ```yaml
 "SAY_HELLO": 
     one: "Hello, %s!"
-    other: "Hello, %s and %s!"
+    other: "Hello %s, hello %s!"
 ```
 
 ...localize a key using plural and multiple parameters:
 ```go
-localizer.TP("en", true, "SAY_HELLO", "Marco", "Valentina") // -> "Hello, Marco and Valentina!"
+localizer.TP("en", true, "SAY_HELLO", "Ed", "Eddy") // -> "Hello Ed, hello Eddy!"
 ```
          
 ## Localized file server:
@@ -108,7 +107,7 @@ const (
 	GEM = "GEM" // generic_error_message
 )
 
-var hardcodedLocs = map[string]map[string]i18n.Localization{
+var hardcodedLocs = map[string]map[string]*i18n.Localization{
 	language.English.String(): {
 		GEM: {
 			One:   "Something went wrong, please try again later %s",
@@ -126,7 +125,7 @@ var hardcodedLocs = map[string]map[string]i18n.Localization{
 var localizer *i18n.I18n
 
 func init() {
-	localizer := i18n.New("", &i18n.Config{
+	localizer := i18n.NewWithConfig(&i18n.Config{
 		Locales: []string{
 			language.English.String(), // "en"
 			language.Italian.String(), // "it"

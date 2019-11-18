@@ -49,8 +49,8 @@ type I18n struct {
 
 	// GetLocaleOverride override the default method
 	// to get the http request locale.
-	// If nothing is returned the default method will be
-	// called anyway (request's cookies and header).
+	// If an empty string is returned the default methods
+	// will be used anyway (request's cookies and header).
 	GetLocaleOverride func(r *http.Request) string `json:"-"`
 
 	// Tags is automatically generated using Config.Locales.

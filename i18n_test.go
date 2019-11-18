@@ -8,7 +8,6 @@ import (
 	"time"
 
 	"github.com/oblq/sprbox"
-
 	"github.com/stretchr/testify/assert"
 	"golang.org/x/text/language"
 )
@@ -33,7 +32,7 @@ var hardcodedLocs = map[string]map[string]*Localization{
 }
 
 func TestNewWConfigFilePath(t *testing.T) {
-	locConfigFile := New("./i18n.yaml", nil)
+	locConfigFile := NewWithConfigFile("./i18n.yaml")
 	assert.Equal(
 		t,
 		locConfigFile.T("en", GEM, "Marco"),
@@ -42,16 +41,13 @@ func TestNewWConfigFilePath(t *testing.T) {
 }
 
 func TestNewWPath(t *testing.T) {
-	locConfigPath := New(
-		"",
-		&Config{
-			Locales: []string{
-				language.English.String(),
-				language.Italian.String(),
-			},
-			Path: "./example/i18n",
+	locConfigPath := NewWithConfig(&Config{
+		Locales: []string{
+			language.English.String(),
+			language.Italian.String(),
 		},
-	)
+		Path: "./example/i18n",
+	})
 	assert.Equal(
 		t,
 		locConfigPath.T("en", GEM, "Marco"),
@@ -61,7 +57,7 @@ func TestNewWPath(t *testing.T) {
 
 func TestNewWLocs(t *testing.T) {
 	// Will throw `log.Fatal()` if an error occour.
-	locConfigMap := New("", &Config{
+	locConfigMap := NewWithConfig(&Config{
 		Locales: []string{
 			language.English.String(),
 			language.Italian.String(),
@@ -82,7 +78,7 @@ func TestNewWLocs(t *testing.T) {
 }
 
 func TestI18n_FileServer(t *testing.T) {
-	localizer := New("", &Config{
+	localizer := NewWithConfig(&Config{
 		Locales: []string{
 			language.English.String(),
 			language.Italian.String(),
@@ -175,7 +171,7 @@ func TestSpareConfig(t *testing.T) {
 }
 
 func TestNoLocalesPassed(t *testing.T) {
-	locConfigMap := New("", &Config{
+	locConfigMap := NewWithConfig(&Config{
 		Locales: []string{},
 		Locs:    hardcodedLocs,
 	})
@@ -187,7 +183,7 @@ func TestNoLocalesPassed(t *testing.T) {
 }
 
 func TestTranslate(t *testing.T) {
-	locConfigMap := New("", &Config{
+	locConfigMap := NewWithConfig(&Config{
 		Locales: []string{language.Italian.String()},
 		Locs:    hardcodedLocs,
 	})

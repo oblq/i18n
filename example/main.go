@@ -10,13 +10,10 @@ import (
 )
 
 func main() {
-	localizer := i18n.New(
-		"",
-		&i18n.Config{
-			Locales: []string{"en", "it"},
-			Path:    "./example/i18n",
-		},
-	)
+	localizer := i18n.NewWithConfig(&i18n.Config{
+		Locales: []string{"en", "it"},
+		Path:    "./example/i18n",
+	})
 
 	http.HandleFunc("/one", func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
@@ -34,7 +31,7 @@ func main() {
 	http.HandleFunc("/manual", func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
 		plural := r.FormValue("plural") == "true"
-		response := []byte(localizer.TP("it", plural, "GEM", "Marco"))
+		response := []byte(localizer.TP(r.FormValue("lang"), plural, "GEM", "Marco"))
 		w.Write(response)
 	})
 
@@ -49,7 +46,7 @@ func main() {
 
 	fmt.Println("Try: http://localhost:8888/one")
 	fmt.Println("Try: http://localhost:8888/other")
-	fmt.Println("Try: http://localhost:8888/manual?plural=true")
+	fmt.Println("Try: http://localhost:8888/manual?plural=true&lang=en")
 	fmt.Println("Try: http://localhost:8888/")
 
 	log.Fatal(http.ListenAndServe(":8888", nil))

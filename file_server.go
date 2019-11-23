@@ -21,9 +21,5 @@ func (i18n *I18n) SetFileServer(handlers map[string]http.Handler) {
 
 func (i18n *I18n) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	locale := i18n.GetLocale(r)
-	if handler, ok := i18n.localizedHandlers[locale]; ok {
-		handler.ServeHTTP(w, r)
-	} else {
-		i18n.localizedHandlers[i18n.Tags[0].String()].ServeHTTP(w, r)
-	}
+	i18n.localizedHandlers[locale].ServeHTTP(w, r)
 }

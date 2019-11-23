@@ -10,13 +10,10 @@ import (
 )
 
 func main() {
-	localizer := i18n.New(
-		"",
-		&i18n.Config{
-			Locales: []string{"en", "it"},
-			Path:    "./example/i18n",
-		},
-	)
+	localizer, _ := i18n.NewWithConfig(&i18n.Config{
+		Locales: []string{"en", "it"},
+		Path:    "./example/i18n",
+	})
 
 	http.HandleFunc("/one", func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)

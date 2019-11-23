@@ -20,3 +20,4 @@ excluded
 
 # File-based project format
 *.iws
+!.idea/

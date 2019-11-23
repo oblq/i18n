@@ -3,8 +3,8 @@ package i18n
 import (
 	"errors"
 	"io/ioutil"
-	"log"
 	"net/http"
+	"path/filepath"
 
 	"github.com/oblq/sprbox"
 	"golang.org/x/text/language"
@@ -24,6 +24,8 @@ type Config struct {
 	// Locales order is important, the first one is the default,
 	// they must be ordered from the most preferred to te least one.
 	// A localization file for any given locale must be provided.
+	// Could be easily generated using `language.English.String()`
+	// from `golang.org/x/text/language` package.
 	Locales []string
 
 	// Path is the path of localization files.
@@ -70,47 +72,51 @@ type I18n struct {
 }
 
 // New create a new instance of i18n.
-func NewWithConfig(config *Config) *I18n {
+func NewWithConfig(config *Config) (*I18n, error) {
 	i18n := &I18n{Config: config}
 
 	if err := i18n.setup(); err != nil {
-		log.Fatal("[i18n] error:", err.Error())
+		return nil, err
 	}
 
-	return i18n
+	return i18n, nil
 }
 
 // New create a new instance of i18n.
 // configFilePath is the path of the config file (like i18n.yaml).
-func NewWithConfigFile(configFilePath string) *I18n {
+func NewWithConfigFile(configFilePath string) (*I18n, error) {
 	i18n := &I18n{Config: &Config{}}
 
 	if len(configFilePath) == 0 {
-		log.Fatal("[i18n] error: invalid config file path")
+		return nil, errors.New("invalid config file path")
 	}
 
 	if compsConfigFile, err := ioutil.ReadFile(configFilePath); err != nil {
-		log.Fatalln("Wrong config path", err)
-	} else if err = sprbox.Unmarshal(compsConfigFile, i18n.Config); err != nil {
-		log.Fatalln("Can't unmarshal config file", err)
+		return nil, err
+	} else if err = sprbox.ConfigParser.Unmarshal(compsConfigFile, i18n.Config); err != nil {
+		return nil, err
 	}
 
 	if err := i18n.setup(); err != nil {
-		log.Fatal("[i18n] error:", err.Error())
+		return nil, err
 	}
 
-	return i18n
+	return i18n, nil
 }
 
 // SpareConfig is the sprbox 'configurable' interface implementation.
 func (i18n *I18n) SpareConfig(configFiles []string) (err error) {
-	if err = sprbox.LoadConfig(&i18n.Config, configFiles...); err == nil {
+	if err = sprbox.ConfigParser.Load(&i18n.Config, configFiles...); err == nil {
 		err = i18n.setup()
 	}
 	return
 }
 
 func (i18n *I18n) setup() error {
+	if len(i18n.Config.Locales) == 0 {
+		return errors.New("i18n.Locales can't be left empty, at least one locale must be provided")
+	}
+
 	i18n.Tags = parseLocalesToTags(i18n.Config.Locales)
 	i18n.matcher = language.NewMatcher(i18n.Tags)
 
@@ -120,6 +126,26 @@ func (i18n *I18n) setup() error {
 		i18n.localizations = i18n.Config.Locs
 		return nil
 	} else {
-		return errors.New("configFilePath or config or locs: one of the two must be provided")
+		return errors.New("config.Path or config.Locs must be provided")
 	}
+}
+
+// LoadLocalizationFiles will unmarshal all the matched
+// localization files in i18n.Config.LocalizationsPath for the given i18n.Tags,
+// localization files must be named as the <language.Tag>.String()
+// (locale, eg.: `en.yml` for `language.English`).
+func (i18n *I18n) LoadLocalizationFiles(localizationsPath string) (err error) {
+	i18n.localizations = make(map[string]map[string]*Localization)
+
+	for _, lang := range i18n.Tags {
+		var langLocalizations map[string]*Localization
+		locFileName := filepath.Join(localizationsPath, lang.String())
+		if err := sprbox.ConfigParser.Load(&langLocalizations, locFileName); err != nil {
+			return err
+		}
+
+		i18n.localizations[lang.String()] = langLocalizations
+	}
+
+	return
 }

@@ -1,4 +1,4 @@
-# SpareBox 
+# spares 
 
 [![awesome](https://raw.githubusercontent.com/istio/fortio/master/docs/mentioned-badge.svg?sanitize=true)](https://github.com/avelino/awesome-go)
 ![GitHub tag](https://img.shields.io/github/tag/oblq/sprbox.svg)
@@ -14,15 +14,22 @@ SpareBox is also an agnostic, layered, config parser (supporting YAML, TOML, JSO
 Keep your projects and their configuration files ordered and maintainable.
 
 ## Installation
+#### Using [go modules](https://blog.golang.org/using-go-modules) (recommended):
+...you only need to import the package in your go code and `go build`:
+```go
+import "github.com/oblq/sprbox"
+```
+If you like to use vendored packages simply run: 
+```bash
+go mod vendor
+```
 
-Using [dep](https://github.com/golang/dep):
-
+#### Using [dep](https://github.com/golang/dep):
 ```sh
 dep ensure -add github.com/oblq/sprbox@master
 ```
 
-...or go get:
-
+#### Using go get
 ```sh
 go get -u github.com/oblq/sprbox
 ```

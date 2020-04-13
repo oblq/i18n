@@ -1,4 +1,4 @@
-module github.com/oblq/i18n
+module github.com/oblq/i18n/v2
 
 go 1.14
 

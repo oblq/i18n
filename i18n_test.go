@@ -7,7 +7,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/oblq/sprbox"
+	"github.com/oblq/swap"
 	"github.com/stretchr/testify/assert"
 	"golang.org/x/text/language"
 )
@@ -184,12 +184,12 @@ func TestI18n_FileServer(t *testing.T) {
 
 func TestSpareConfig(t *testing.T) {
 	type Box struct {
-		Localizer I18n `sprs:"i18n"`
+		Localizer I18n `swap:"i18n"`
 	}
 
 	var toolBox Box
-	if err := sprbox.NestedConfigsParser.Load(&toolBox, "./"); err != nil {
-		t.Error("SpareConfig failed: ", err.Error())
+	if err := swap.NewBuilder("./").Build(&toolBox); err != nil {
+		t.Error("swap.Parse failed: ", err.Error())
 	}
 
 	assert.Equal(t,

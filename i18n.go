@@ -2,11 +2,10 @@ package i18n
 
 import (
 	"errors"
-	"io/ioutil"
 	"net/http"
 	"path/filepath"
 
-	"github.com/oblq/sprbox"
+	"github.com/oblq/swap"
 	"golang.org/x/text/language"
 )
 
@@ -91,9 +90,7 @@ func NewWithConfigFile(configFilePath string) (*I18n, error) {
 		return nil, errors.New("invalid config file path")
 	}
 
-	if compsConfigFile, err := ioutil.ReadFile(configFilePath); err != nil {
-		return nil, err
-	} else if err = sprbox.ConfigParser.Unmarshal(compsConfigFile, i18n.Config); err != nil {
+	if err := swap.Parse(i18n.Config, configFilePath); err != nil {
 		return nil, err
 	}
 
@@ -104,9 +101,9 @@ func NewWithConfigFile(configFilePath string) (*I18n, error) {
 	return i18n, nil
 }
 
-// SpareConfig is the sprbox 'configurable' interface implementation.
-func (i18n *I18n) SpareConfig(configFiles []string) (err error) {
-	if err = sprbox.ConfigParser.Load(&i18n.Config, configFiles...); err == nil {
+// SpareConfig is the Swap 'Configurable' interface implementation.
+func (i18n *I18n) Configure(configFiles ...string) (err error) {
+	if err = swap.Parse(i18n.Config, configFiles...); err == nil {
 		err = i18n.setup()
 	}
 	return
@@ -140,7 +137,7 @@ func (i18n *I18n) LoadLocalizationFiles(localizationsPath string) (err error) {
 	for _, lang := range i18n.Tags {
 		var langLocalizations map[string]*Localization
 		locFileName := filepath.Join(localizationsPath, lang.String())
-		if err := sprbox.ConfigParser.Load(&langLocalizations, locFileName); err != nil {
+		if err := swap.Parse(&langLocalizations, locFileName); err != nil {
 			return err
 		}
 

@@ -6,35 +6,15 @@
 [![Go Report Card](https://goreportcard.com/badge/github.com/oblq/i18n)](https://goreportcard.com/report/github.com/oblq/i18n)
 [![GoDoc](https://godoc.org/github.com/oblq/i18n?status.svg)](https://godoc.org/github.com/oblq/i18n)
 [![MIT license](https://img.shields.io/badge/License-MIT-blue.svg)](https://lbesson.mit-license.org/)
-[![sprbox](https://img.shields.io/badge/sprbox-ready-green.svg)](https://github.com/oblq/sprbox)  
 
 **i18n** is a minimal, flexible, simple to use and simple to embed (in your own packages) localizations package.  
 It accept yaml, json or toml for both config and localizations files.
 
-i18n is ready to be used in sprbox.
-
-
 ## Installation
-#### Using [go modules](https://blog.golang.org/using-go-modules) (recommended):
-...you only need to import the package in your go code and `go build`:
-```go
-import "github.com/oblq/sprbox"
-```
-If you like to use vendored packages simply run: 
-```bash
-go mod vendor
-```
 
-#### Using [dep](https://github.com/golang/dep):
 ```sh
-dep ensure -add github.com/oblq/sprbox@master
+go get -u github.com/oblq/i18n
 ```
-
-#### Using go get
-```sh
-go get -u github.com/oblq/sprbox
-```
-
 
 ## Quickstart
 

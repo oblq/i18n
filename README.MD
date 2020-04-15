@@ -13,7 +13,7 @@ It accept yaml, json or toml for both config and localizations files.
 ## Installation
 
 ```sh
-go get -u github.com/oblq/i18n
+go get -u github.com/oblq/i18n/v2
 ```
 
 ## Quickstart
@@ -23,7 +23,7 @@ Create a new instance:
 package main
 
 import (
-	"github.com/oblq/i18n"
+	"github.com/oblq/i18n/v2"
 	"golang.org/x/text/language"
 )
 
@@ -101,7 +101,7 @@ Use hardcoded localizations, they can be a json, yaml or toml string:
 package main
 
 import (
-	"github.com/oblq/i18n"
+	"github.com/oblq/i18n/v2"
 	"golang.org/x/text/language"
 )
 

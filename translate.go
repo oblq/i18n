@@ -6,17 +6,20 @@ import (
 )
 
 func (i18n *I18n) translate(locale string, plural bool, key string, params ...interface{}) string {
-	var language map[string]*Localization
+	var localeLocalizations map[string]string
 	var ok bool
-	if language, ok = i18n.localizations[locale]; !ok {
-		language, _ = i18n.localizations[i18n.Tags[0].String()]
+	if localeLocalizations, ok = i18n.localizations[locale]; !ok {
+		localeLocalizations, _ = i18n.localizations[i18n.Tags[0].String()]
 	}
 
-	if localization, ok := language[key]; ok {
+	if localization, ok := localeLocalizations[key]; ok {
 		if plural {
-			return fmt.Sprintf(localization.Other, params...)
+			pluralKey := fmt.Sprintf("%s.plural", key)
+			if localizationPlural, ok := localeLocalizations[pluralKey]; ok {
+				return fmt.Sprintf(localizationPlural, params...)
+			}
 		}
-		return fmt.Sprintf(localization.One, params...)
+		return fmt.Sprintf(localization, params...)
 	}
 	return key
 }

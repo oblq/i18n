@@ -51,9 +51,8 @@ Localize a key using plural and multiple parameters:
 ```yaml
 # ./example/localizations/en.yaml file
 
-WHOAMI: 
-    one: "I'm %s!"
-    other: "We are %s and %s!"
+WHOAMI: "I'm %s!"
+WHOAMI.plural: "We are %s and %s!"
 ```
 
 ```go
@@ -108,20 +107,17 @@ import (
 // keys
 const (
 	GEM = "GEM" // generic_error_message
+	GEM_P = "GEM_PLURAL"
 )
 
-var hardcodedLocs = map[string]map[string]*i18n.Localization{
+var hardcodedLocs = map[string]map[string]string{
 	language.English.String(): {
-		GEM: {
-			One:   "Something went wrong, please try again later %s",
-			Other: "Some things went wrong, please try again later %s",
-		},
+		GEM: "Something went wrong, please try again later %s",
+		GEM_P: "Some things went wrong, please try again later %s",
 	},
 	language.Italian.String(): {
-		GEM: {
-			One:   "Qualcosa è andato storto, riprova più tardi %s",
-			Other: "Alcune cose sono andate storte, riprova più tardi %s",
-		},
+		GEM: "Qualcosa è andato storto, riprova più tardi %s",
+		GEM_P: "Alcune cose sono andate storte, riprova più tardi %s",
 	},
 }
 

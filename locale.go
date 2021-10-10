@@ -15,7 +15,7 @@ const (
 )
 
 // getLocaleUnsafe return the request locale.
-// It first look for the locale by the
+// It first looks for the locale by the
 // GetLocaleOverride func (if defined),
 // then if locale is empty it will look in:
 // - cookies ("language" and/or "lang" keys)
@@ -44,7 +44,7 @@ func (i18n *I18n) getLocaleUnsafe(r *http.Request) (locale string) {
 // GetLanguageTag return the request language.Tag.
 // A recognized tag is always returned.
 //  <language.Tag>.String() // -> locale
-// It first look for the request locale (GetLocale func),
+// It first looks for the request locale (GetLocale func),
 // then it will look for the corresponding language.Tag
 // in the i18n predefined Tags, if no tag is matched
 // the first one will be returned.
@@ -64,7 +64,7 @@ func (i18n *I18n) GetLanguageTag(r *http.Request) language.Tag {
 }
 
 // GetLocale return GetLanguageTag(r).String()
-// It always return a valid result.
+// It always returns a valid result.
 func (i18n *I18n) GetLocale(r *http.Request) (locale string) {
 	return i18n.GetLanguageTag(r).String()
 }

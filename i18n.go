@@ -2,6 +2,7 @@ package i18n
 
 import (
 	"errors"
+	"log"
 	"net/http"
 	"path/filepath"
 
@@ -18,7 +19,7 @@ import (
 // Set Path OR Locs, Path takes precedence over Locs.
 // Set Locs if you want to use hardcoded localizations,
 // useful to embed i18n in other library packages.
-// Otherwise set Path to load localization files.
+// Otherwise, set Path to load localization files.
 type Config struct {
 	// Locales order is important, the first one is the default,
 	// they must be ordered from the most preferred to te least one.
@@ -34,13 +35,7 @@ type Config struct {
 	// Locs contains hardcoded localizations.
 	// Use it if you want to use hardcoded localizations,
 	// useful to embed i18n in other library packages.
-	Locs map[string]map[string]*Localization
-}
-
-// Localization represent a key value with localized strings
-// for both single and plural results
-type Localization struct {
-	One, Other string
+	Locs map[string]map[string]string
 }
 
 // I18n is the i18n instance.
@@ -64,13 +59,13 @@ type I18n struct {
 	matcher language.Matcher
 
 	// localizations[<language>][<key>] -> Localization
-	localizations map[string]map[string]*Localization
+	localizations map[string]map[string]string
 
 	// localizedHandlers is used by the FileServer
 	localizedHandlers map[string]http.Handler
 }
 
-// New create a new instance of i18n.
+// NewWithConfig create a new instance of i18n.
 func NewWithConfig(config *Config) (*I18n, error) {
 	i18n := &I18n{Config: config}
 
@@ -81,7 +76,7 @@ func NewWithConfig(config *Config) (*I18n, error) {
 	return i18n, nil
 }
 
-// New create a new instance of i18n.
+// NewWithConfigFile create a new instance of i18n.
 // configFilePath is the path of the config file (like i18n.yaml).
 func NewWithConfigFile(configFilePath string) (*I18n, error) {
 	i18n := &I18n{Config: &Config{}}
@@ -101,7 +96,22 @@ func NewWithConfigFile(configFilePath string) (*I18n, error) {
 	return i18n, nil
 }
 
-// SpareConfig is the Swap 'Configurable' interface implementation.
+// New is the oblq/swap `Factory` interface.
+// must be a singleton otherwise a lot of connection to the db will remain open
+func (i18n *I18n) New(configFiles ...string) (instance interface{}, err error) {
+	config := new(Config)
+	if err = swap.Parse(config, configFiles...); err != nil {
+		return nil, err
+	}
+
+	if instance, err = NewWithConfig(config); err != nil {
+		return nil, err
+	}
+
+	return
+}
+
+// Configure is the oblq/swap `Configurable` interface implementation.
 func (i18n *I18n) Configure(configFiles ...string) (err error) {
 	if err = swap.Parse(i18n.Config, configFiles...); err == nil {
 		err = i18n.setup()
@@ -117,11 +127,12 @@ func (i18n *I18n) setup() error {
 	i18n.Tags = parseLocalesToTags(i18n.Config.Locales)
 	i18n.matcher = language.NewMatcher(i18n.Tags)
 
-	if len(i18n.Config.Path) > 0 {
-		return i18n.LoadLocalizationFiles(i18n.Config.Path)
-	} else if i18n.Config.Locs != nil {
+	if i18n.Config.Locs != nil {
 		i18n.localizations = i18n.Config.Locs
+		log.Println("[i18n] ...using the provided `Locs` variable")
 		return nil
+	} else if len(i18n.Config.Path) > 0 {
+		return i18n.LoadLocalizationFiles(i18n.Config.Path)
 	} else {
 		return errors.New("config.Path or config.Locs must be provided")
 	}
@@ -130,12 +141,12 @@ func (i18n *I18n) setup() error {
 // LoadLocalizationFiles will unmarshal all the matched
 // localization files in i18n.Config.LocalizationsPath for the given i18n.Tags,
 // localization files must be named as the <language.Tag>.String()
-// (locale, eg.: `en.yml` for `language.English`).
+// (locale, e.g.: `en.yml` for `language.English`).
 func (i18n *I18n) LoadLocalizationFiles(localizationsPath string) (err error) {
-	i18n.localizations = make(map[string]map[string]*Localization)
+	i18n.localizations = make(map[string]map[string]string)
 
 	for _, lang := range i18n.Tags {
-		var langLocalizations map[string]*Localization
+		var langLocalizations map[string]string
 		locFileName := filepath.Join(localizationsPath, lang.String())
 		if err := swap.Parse(&langLocalizations, locFileName); err != nil {
 			return err
@@ -143,6 +154,8 @@ func (i18n *I18n) LoadLocalizationFiles(localizationsPath string) (err error) {
 
 		i18n.localizations[lang.String()] = langLocalizations
 	}
+
+	log.Println("[i18n] ...using the provided localizationsPath variable")
 
 	return
 }

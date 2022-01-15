@@ -7,13 +7,6 @@ import (
 	"golang.org/x/text/language"
 )
 
-const (
-	cookieKey1 = "language"
-	cookieKey2 = "lang"
-
-	headerKey = "Accept-Language"
-)
-
 // getLocaleUnsafe return the request locale.
 // It first looks for the locale by the
 // GetLocaleOverride func (if defined),
@@ -30,12 +23,21 @@ func (i18n *I18n) getLocaleUnsafe(r *http.Request) (locale string) {
 	}
 
 	if len(locale) == 0 {
-		if cookieLang, err := r.Cookie(cookieKey1); err == nil {
-			locale = cookieLang.Value
-		} else if cookieLang, err := r.Cookie(cookieKey2); err == nil {
-			locale = cookieLang.Value
-		} else if acceptLang := r.Header.Get(headerKey); len(acceptLang) > 0 {
-			locale = acceptLang
+		for _, lookUpStrategy := range i18n.Config.HTTPLookUpStrategy {
+			switch lookUpStrategy.ID {
+			case HTTPLocalePositionIDHeader:
+				locale = r.Header.Get(lookUpStrategy.Key)
+			case HTTPLocalePositionIDCookie:
+				if cookieLang, err := r.Cookie(lookUpStrategy.Key); err == nil {
+					locale = cookieLang.Value
+				}
+			case HTTPLocalePositionIDQuery:
+				locale = r.URL.Query().Get(lookUpStrategy.Key)
+			}
+
+			if len(locale) > 0 {
+				break
+			}
 		}
 	}
 	return

@@ -30,7 +30,7 @@ import (
 func init() {
 	// Optionally pass the config file path and nil config.
 	// The config file can be in yaml, json or toml format.
-	localizer := i18n.NewWithConfig(&i18n.Config{
+	localizer, err := i18n.NewWithConfig(&i18n.Config{
             Locales: []string{
                 language.English.String(), // "en"
                 language.Italian.String(), // "it"
@@ -52,11 +52,10 @@ Localize a key using plural and multiple parameters:
 # ./example/localizations/en.yaml file
 
 WHOAMI: "I'm %s!"
-WHOAMI.plural: "We are %s and %s!"
 ```
 
 ```go
-localizer.TP("en", true, "WHOAMI", "Ed", "Eddy") // -> "We are Ed and Eddy!"
+localizer.TP("en", "WHOAMI", "i18n") // -> "I'm i18n!"
 ```
 
 
@@ -78,7 +77,6 @@ localizer.GetLocaleOverride = func(r *http.Request) string {
     return user.Locale
 }
 ```          
-
 
 ## Localized file server:
 
@@ -107,30 +105,67 @@ import (
 // keys
 const (
 	GEM = "GEM" // generic_error_message
-	GEM_P = "GEM_PLURAL"
 )
 
 var hardcodedLocs = map[string]map[string]string{
 	language.English.String(): {
 		GEM: "Something went wrong, please try again later %s",
-		GEM_P: "Some things went wrong, please try again later %s",
 	},
 	language.Italian.String(): {
 		GEM: "Qualcosa è andato storto, riprova più tardi %s",
-		GEM_P: "Alcune cose sono andate storte, riprova più tardi %s",
 	},
 }
 
 var localizer *i18n.I18n
 
 func init() {
-	localizer := i18n.NewWithConfig(&i18n.Config{
+	localizer, err := i18n.NewWithConfig(&i18n.Config{
 		Locales: []string{
 			language.English.String(), // "en"
 			language.Italian.String(), // "it"
 		},
 		Locs: hardcodedLocs,
 	})
+}
+```
+
+## Middleware
+
+```go
+package main
+
+import (
+	"net/http"
+	
+	"github.com/oblq/i18n/v2"
+	"golang.org/x/text/language"
+)
+
+func init() {
+	config := &i18n.Config{
+		HTTPLookUpStrategy: []i18n.HTTPLocalePosition{
+			{i18n.HTTPLocalePositionIDHeader, "Accept-Language"},
+			{i18n.HTTPLocalePositionIDCookie, "locale"},
+			{i18n.HTTPLocalePositionIDQuery, "lang"},
+		},
+		Locales: []string{
+			language.Italian.String(), 
+			language.English.String(),
+		},
+	}
+
+	localizer, err := i18n.NewWithConfig(config)
+	if err != nil {
+		panic(err)
+	}
+
+	http.Handle("/this-is-my-locale", localizer.Middleware(http.HandlerFunc(getLocale)))
+	http.ListenAndServe(":8080", nil)
+}
+
+func getLocale(w http.ResponseWriter, r *http.Request) {
+	locale := r.Context().Value(i18n.MiddlewareContextLocaleKey)
+	_, _ = w.Write([]byte(locale.(string)))
 }
 ```
 

@@ -2,13 +2,31 @@ package i18n
 
 import (
 	"errors"
-	"log"
 	"net/http"
 	"path/filepath"
 
 	"github.com/oblq/swap"
 	"golang.org/x/text/language"
 )
+
+type HTTPLocalePositionID string
+
+const (
+	HTTPLocalePositionIDHeader HTTPLocalePositionID = "header"
+	HTTPLocalePositionIDCookie HTTPLocalePositionID = "cookie"
+	HTTPLocalePositionIDQuery  HTTPLocalePositionID = "query"
+)
+
+type HTTPLocalePosition struct {
+	ID  HTTPLocalePositionID
+	Key string
+}
+
+var DefaultHTTPLookUpStrategy = []HTTPLocalePosition{
+	{HTTPLocalePositionIDHeader, "Accept-Language"},
+	{HTTPLocalePositionIDCookie, "lang"},
+	{HTTPLocalePositionIDQuery, "lang"},
+}
 
 // Config is the i18n config struct.
 //
@@ -21,6 +39,11 @@ import (
 // useful to embed i18n in other library packages.
 // Otherwise, set Path to load localization files.
 type Config struct {
+	// HTTPLookUpStrategy represent the strategy to extract the language from the request.
+	// The order of element is important, the first one is the default.
+	// Default is DefaultMiddlewareLookUpStrategy.
+	HTTPLookUpStrategy []HTTPLocalePosition
+
 	// Locales order is important, the first one is the default,
 	// they must be ordered from the most preferred to te least one.
 	// A localization file for any given locale must be provided.
@@ -96,7 +119,7 @@ func NewWithConfigFile(configFilePath string) (*I18n, error) {
 	return i18n, nil
 }
 
-// New is the oblq/swap `Factory` interface.
+// New is the github.com/oblq/swap`Factory` interface.
 // must be a singleton otherwise a lot of connection to the db will remain open
 func (i18n *I18n) New(configFiles ...string) (instance interface{}, err error) {
 	config := new(Config)
@@ -111,7 +134,7 @@ func (i18n *I18n) New(configFiles ...string) (instance interface{}, err error) {
 	return
 }
 
-// Configure is the oblq/swap `Configurable` interface implementation.
+// Configure is the github.com/oblq/swap`Configurable` interface implementation.
 func (i18n *I18n) Configure(configFiles ...string) (err error) {
 	if err = swap.Parse(i18n.Config, configFiles...); err == nil {
 		err = i18n.setup()
@@ -120,6 +143,10 @@ func (i18n *I18n) Configure(configFiles ...string) (err error) {
 }
 
 func (i18n *I18n) setup() error {
+	if i18n.Config.HTTPLookUpStrategy == nil {
+		i18n.Config.HTTPLookUpStrategy = DefaultHTTPLookUpStrategy
+	}
+
 	if len(i18n.Config.Locales) == 0 {
 		return errors.New("i18n.Locales can't be left empty, at least one locale must be provided")
 	}
@@ -129,13 +156,12 @@ func (i18n *I18n) setup() error {
 
 	if i18n.Config.Locs != nil {
 		i18n.localizations = i18n.Config.Locs
-		log.Println("[i18n] ...using the provided `Locs` variable")
 		return nil
 	} else if len(i18n.Config.Path) > 0 {
 		return i18n.LoadLocalizationFiles(i18n.Config.Path)
-	} else {
-		return errors.New("config.Path or config.Locs must be provided")
 	}
+
+	return nil
 }
 
 // LoadLocalizationFiles will unmarshal all the matched
@@ -154,8 +180,6 @@ func (i18n *I18n) LoadLocalizationFiles(localizationsPath string) (err error) {
 
 		i18n.localizations[lang.String()] = langLocalizations
 	}
-
-	log.Println("[i18n] ...using the provided localizationsPath variable")
 
 	return
 }

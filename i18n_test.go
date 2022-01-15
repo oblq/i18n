@@ -1,6 +1,7 @@
 package i18n
 
 import (
+	"fmt"
 	"net/http"
 	"net/http/httptest"
 	"strings"
@@ -13,21 +14,24 @@ import (
 )
 
 const (
-	GEM = "GEM" // generic_error_message
+	GEM       = "GEM"        // generic_error_message
+	GEMPlural = "GEM.plural" // generic_error_message
 )
 
-var hardcodedLocs = map[string]map[string]*Localization{
+var TestHTTPLookUpStrategy = []HTTPLocalePosition{
+	{HTTPLocalePositionIDHeader, "Accept-Language"},
+	{HTTPLocalePositionIDCookie, "lang"},
+	{HTTPLocalePositionIDQuery, "lang"},
+}
+
+var hardcodedLocs = map[string]map[string]string{
 	language.English.String(): {
-		GEM: {
-			One:   "Something went wrong, please try again later %s",
-			Other: "Some things went wrong, please try again later %s",
-		},
+		GEM:       "Something went wrong, please try again later %s",
+		GEMPlural: "Some things went wrong, please try again later %s",
 	},
 	language.Italian.String(): {
-		GEM: {
-			One:   "Qualcosa è andato storto, riprova più tardi %s",
-			Other: "Alcune cose sono andate storte, riprova più tardi %s",
-		},
+		GEM:       "Qualcosa è andato storto, riprova più tardi %s",
+		GEMPlural: "Alcune cose sono andate storte, riprova più tardi %s",
 	},
 }
 
@@ -70,7 +74,7 @@ func TestNewWithConfig(t *testing.T) {
 	})
 	assert.Equal(t, nil, err)
 	assert.Equal(t,
-		locConfigMap.TP("en", false, GEM, "Marco"),
+		locConfigMap.TP("en", GEM, "Marco"),
 		"Something went wrong, please try again later Marco")
 }
 
@@ -95,16 +99,17 @@ func TestNewWithConfigWithLocs(t *testing.T) {
 	assert.Equal(t, nil, err)
 
 	assert.Equal(t,
-		locConfigMap.TP("en", false, GEM, "Marco"),
+		locConfigMap.TP("en", GEM, "Marco"),
 		"Something went wrong, please try again later Marco")
 
 	assert.Equal(t,
-		locConfigMap.TP("en", true, GEM, "Marco"),
+		locConfigMap.TP("en", GEMPlural, "Marco"),
 		"Some things went wrong, please try again later Marco")
 }
 
 func TestI18n_FileServer(t *testing.T) {
 	localizer, err := NewWithConfig(&Config{
+		HTTPLookUpStrategy: TestHTTPLookUpStrategy,
 		Locales: []string{
 			language.English.String(),
 			language.Italian.String(),
@@ -131,31 +136,31 @@ func TestI18n_FileServer(t *testing.T) {
 		t.Errorf("Expected response body to contain \"%s\" but found \"%s\"", "en", response.Body.String())
 	}
 
-	// it by header
+	// it from header
 	testingLocale := "it"
 	request, _ = http.NewRequest("GET", "/", nil)
-	request.Header.Add(headerKey, testingLocale)
+	request.Header.Add(TestHTTPLookUpStrategy[0].Key, testingLocale)
 	response = httptest.NewRecorder()
 	localizer.ServeHTTP(response, request)
 	if contains := strings.Contains(response.Body.String(), testingLocale); !contains {
 		t.Errorf("Expected response body to contain \"%s\" but found \"%s\"", testingLocale, response.Body.String())
 	}
 
-	// en by header
+	// en from header
 	testingLocale = "en"
 	request, _ = http.NewRequest("GET", "/", nil)
-	request.Header.Add(headerKey, testingLocale)
+	request.Header.Add(TestHTTPLookUpStrategy[0].Key, testingLocale)
 	response = httptest.NewRecorder()
 	localizer.ServeHTTP(response, request)
 	if contains := strings.Contains(response.Body.String(), testingLocale); !contains {
 		t.Errorf("Expected response body to contain \"%s\" but found \"%s\"", testingLocale, response.Body.String())
 	}
 
-	// it by cookies
+	// it from cookies
 	testingLocale = "it"
 	request, _ = http.NewRequest("GET", "/", nil)
 	request.AddCookie(&http.Cookie{
-		Name:    cookieKey2,
+		Name:    TestHTTPLookUpStrategy[2].Key,
 		Value:   testingLocale,
 		Expires: time.Now().AddDate(0, 0, 7),
 		Path:    "/",
@@ -166,11 +171,11 @@ func TestI18n_FileServer(t *testing.T) {
 		t.Errorf("Expected response body to contain \"%s\" but found \"%s\"", testingLocale, response.Body.String())
 	}
 
-	// unandled locale
+	// unhandled locale
 	testingLocale = "es"
 	request, _ = http.NewRequest("GET", "/", nil)
 	request.AddCookie(&http.Cookie{
-		Name:    cookieKey2,
+		Name:    TestHTTPLookUpStrategy[2].Key,
 		Value:   testingLocale,
 		Expires: time.Now().AddDate(0, 0, 7),
 		Path:    "/",
@@ -193,7 +198,7 @@ func TestSpareConfig(t *testing.T) {
 	}
 
 	assert.Equal(t,
-		toolBox.Localizer.TP("en", false, GEM, "Marco"),
+		toolBox.Localizer.TP("en", GEM, "Marco"),
 		"Something went wrong, please try again later Marco")
 }
 
@@ -206,7 +211,7 @@ func TestTranslate(t *testing.T) {
 	assert.Equal(t, nil, err)
 
 	r, _ := http.NewRequest("POST", "/", nil)
-	r.Header.Add(headerKey, "it")
+	r.Header.Add(TestHTTPLookUpStrategy[0].Key, "it")
 
 	assert.Equal(t,
 		"Qualcosa è andato storto, riprova più tardi Marco",
@@ -214,9 +219,85 @@ func TestTranslate(t *testing.T) {
 
 	assert.Equal(t,
 		"Qualcosa è andato storto, riprova più tardi Marco",
-		locConfigMap.AutoTP(r, false, GEM, "Marco"))
+		locConfigMap.AutoTP(r, GEM, "Marco"))
 
 	assert.Equal(t,
 		"Alcune cose sono andate storte, riprova più tardi Marco",
-		locConfigMap.AutoTP(r, true, GEM, "Marco"))
+		locConfigMap.AutoTP(r, GEMPlural, "Marco"))
+}
+
+func TestMiddleware(t *testing.T) {
+	tt := []struct {
+		name     string
+		position HTTPLocalePosition
+		locale   string
+		want     string
+	}{
+		{
+			name: "with a pizza ID and quantity",
+			position: HTTPLocalePosition{
+				ID:  HTTPLocalePositionIDHeader,
+				Key: "Accept-Language",
+			},
+			locale: "en",
+			want:   "en",
+		},
+		{
+			name: "with a pizza ID and quantity",
+			position: HTTPLocalePosition{
+				ID:  HTTPLocalePositionIDCookie,
+				Key: "lang",
+			},
+			locale: "en",
+			want:   "en",
+		},
+		{
+			name: "with a pizza ID and quantity",
+			position: HTTPLocalePosition{
+				ID:  HTTPLocalePositionIDQuery,
+				Key: "lang",
+			},
+			locale: "en",
+			want:   "en",
+		},
+	}
+
+	localizer, err := NewWithConfig(&Config{Locales: []string{language.Italian.String(), language.English.String()}})
+	if err != nil {
+		panic(err)
+	}
+
+	for _, tc := range tt {
+		t.Run(tc.name, func(t *testing.T) {
+			request := httptest.NewRequest(http.MethodGet, "/test", nil)
+			responseRecorder := httptest.NewRecorder()
+
+			switch tc.position.ID {
+			case HTTPLocalePositionIDHeader:
+				request.Header.Add(tc.position.Key, tc.locale)
+			case HTTPLocalePositionIDCookie:
+				request.AddCookie(&http.Cookie{
+					Name:  tc.position.Key,
+					Value: tc.locale,
+				})
+			case HTTPLocalePositionIDQuery:
+				request.URL.RawQuery = fmt.Sprintf("%s=%s", tc.position.Key, tc.locale)
+			}
+
+			localizer.Config.HTTPLookUpStrategy = []HTTPLocalePosition{tc.position}
+			handler := localizer.Middleware(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+				locale := r.Context().Value(MiddlewareContextLocaleKey)
+				_, _ = w.Write([]byte(locale.(string)))
+			}))
+
+			handler.ServeHTTP(responseRecorder, request)
+			if responseRecorder.Code != http.StatusOK {
+				t.Errorf("bad status code '%d'", responseRecorder.Code)
+			}
+
+			if strings.TrimSpace(responseRecorder.Body.String()) != tc.want {
+				t.Errorf("Want '%s', got '%s'", tc.want, responseRecorder.Body)
+			}
+		})
+	}
 }

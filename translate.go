@@ -5,7 +5,7 @@ import (
 	"net/http"
 )
 
-func (i18n *I18n) translate(locale string, plural bool, key string, params ...interface{}) string {
+func (i18n *I18n) translate(locale string, key string, params ...interface{}) string {
 	var localeLocalizations map[string]string
 	var ok bool
 	if localeLocalizations, ok = i18n.localizations[locale]; !ok {
@@ -13,12 +13,6 @@ func (i18n *I18n) translate(locale string, plural bool, key string, params ...in
 	}
 
 	if localization, ok := localeLocalizations[key]; ok {
-		if plural {
-			pluralKey := fmt.Sprintf("%s.plural", key)
-			if localizationPlural, ok := localeLocalizations[pluralKey]; ok {
-				return fmt.Sprintf(localizationPlural, params...)
-			}
-		}
 		return fmt.Sprintf(localization, params...)
 	}
 	return key
@@ -28,7 +22,7 @@ func (i18n *I18n) translate(locale string, plural bool, key string, params ...in
 
 // T translate the key based on the passed locale.
 func (i18n *I18n) T(locale string, key string, params ...interface{}) string {
-	return i18n.translate(locale, false, key, params...)
+	return i18n.translate(locale, key, params...)
 }
 
 // AutoT automatically translate the key based on the http request:
@@ -41,13 +35,13 @@ func (i18n *I18n) AutoT(r *http.Request, key string, params ...interface{}) stri
 		return key
 	}
 	locale := i18n.GetLocale(r)
-	return i18n.translate(locale, false, key, params...)
+	return i18n.translate(locale, key, params...)
 }
 
 // TP translate the key based on the passed locale
 // and for possibly plural values.
-func (i18n *I18n) TP(locale string, plural bool, key string, params ...interface{}) string {
-	return i18n.translate(locale, plural, key, params...)
+func (i18n *I18n) TP(locale string, key string, params ...interface{}) string {
+	return i18n.translate(locale, key, params...)
 }
 
 // AutoTP automatically translate the key based on the
@@ -55,11 +49,11 @@ func (i18n *I18n) TP(locale string, plural bool, key string, params ...interface
 // it will first look for user language by the GetLocaleOverride func,
 // then in cookies ("language" and/or "lang" keys),
 // then in 'Accept-Language' header.
-func (i18n *I18n) AutoTP(r *http.Request, plural bool, key string, params ...interface{}) string {
+func (i18n *I18n) AutoTP(r *http.Request, key string, params ...interface{}) string {
 	if r == nil {
 		fmt.Println("[i18n] http request nil, key:", key)
 		return key
 	}
 	locale := i18n.GetLocale(r)
-	return i18n.translate(locale, plural, key, params...)
+	return i18n.translate(locale, key, params...)
 }

@@ -1,3 +1,11 @@
+httplookupstrategy:
+  - id: header
+    key: Accept-Language
+  - id: cookie
+    key: lang
+  - id: query
+    key: lang
+
 # The default language must go in the first place,
 # they must be ordered from the most preferred to te least one.
 locales:

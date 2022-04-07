@@ -52,8 +52,25 @@ func (i18n *I18n) getLocaleUnsafe(r *http.Request) (locale string) {
 // the first one will be returned.
 func (i18n *I18n) GetLanguageTag(r *http.Request) language.Tag {
 	locale := i18n.getLocaleUnsafe(r)
+	return i18n.MatchAvailableLanguageTag(locale)
+}
+
+// GetLocale return GetLanguageTag(r).String()
+// It always returns a valid result.
+func (i18n *I18n) GetLocale(r *http.Request) (locale string) {
+	return i18n.GetLanguageTag(r).String()
+}
+
+// MatchAvailableLanguageTag return one of the available locales
+// corresponding language.Tag.
+//  <language.Tag>.String() // -> locale
+// A recognized language is always returned.
+// If no locale is matched the first one from the supported list
+// will be returned.
+func (i18n *I18n) MatchAvailableLanguageTag(locale string) language.Tag {
 	if len(locale) > 0 {
-		t, _, _ := language.ParseAcceptLanguage(locale) // We ignore the error: the default language will be selected for t == nil.
+		// We ignore the error: the default language will be selected for t == nil.
+		t, _, _ := language.ParseAcceptLanguage(locale)
 		// we don't return tag anymore since it has some bugs, we can retrieve it from supported languages with index
 		//tag, _, _ := matcher.Match(t...)
 		_, i, _ := i18n.matcher.Match(t...)
@@ -63,12 +80,6 @@ func (i18n *I18n) GetLanguageTag(r *http.Request) language.Tag {
 		}
 	}
 	return i18n.Tags[0]
-}
-
-// GetLocale return GetLanguageTag(r).String()
-// It always returns a valid result.
-func (i18n *I18n) GetLocale(r *http.Request) (locale string) {
-	return i18n.GetLanguageTag(r).String()
 }
 
 // parseLocalesToTags convert an array of locales to an array of language.Tag.

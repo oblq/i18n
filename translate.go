@@ -9,7 +9,8 @@ func (i18n *I18n) translate(locale string, key string, params ...interface{}) st
 	var localeLocalizations map[string]string
 	var ok bool
 	if localeLocalizations, ok = i18n.localizations[locale]; !ok {
-		localeLocalizations, _ = i18n.localizations[i18n.Tags[0].String()]
+		availableLocale := i18n.MatchAvailableLanguageTag(locale)
+		localeLocalizations, _ = i18n.localizations[availableLocale.String()]
 	}
 
 	if localization, ok := localeLocalizations[key]; ok {
